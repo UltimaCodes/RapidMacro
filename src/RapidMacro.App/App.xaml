@@ -1,0 +1,88 @@
+<Application x:Class="RapidMacro.App.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:local="clr-namespace:RapidMacro.App"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ui:ThemesDictionary Theme="Dark" />
+                <ui:ControlsDictionary />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- ===== Brand identity (teal accent, our own — not Wooting orange) ===== -->
+            <Color x:Key="RmAccentColor">#2DD4BF</Color>
+            <SolidColorBrush x:Key="RmAccentBrush" Color="{StaticResource RmAccentColor}" />
+            <SolidColorBrush x:Key="RmAccentMutedBrush" Color="#262DD4BF" />
+            <SolidColorBrush x:Key="RmSidebarBrush" Color="#CC101218" />
+            <SolidColorBrush x:Key="RmCardBrush" Color="#1A1D24" />
+            <SolidColorBrush x:Key="RmCardBorderBrush" Color="#2A2E38" />
+            <SolidColorBrush x:Key="RmHoverBrush" Color="#1AFFFFFF" />
+
+            <!-- ===== Left-rail navigation item ===== -->
+            <Style x:Key="NavItemStyle" TargetType="RadioButton">
+                <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+                <Setter Property="FontSize" Value="14" />
+                <Setter Property="Cursor" Value="Hand" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="RadioButton">
+                            <Border x:Name="Bd" Background="Transparent" CornerRadius="8"
+                                    Margin="10,2" Padding="12,9">
+                                <Grid>
+                                    <Border x:Name="Bar" Width="3" Height="18" HorizontalAlignment="Left"
+                                            CornerRadius="2" Background="{StaticResource RmAccentBrush}"
+                                            Visibility="Collapsed" />
+                                    <ContentPresenter Margin="12,0,0,0" VerticalAlignment="Center" />
+                                </Grid>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="IsMouseOver" Value="True" />
+                                        <Condition Property="IsChecked" Value="False" />
+                                    </MultiTrigger.Conditions>
+                                    <Setter TargetName="Bd" Property="Background" Value="{StaticResource RmHoverBrush}" />
+                                </MultiTrigger>
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter TargetName="Bd" Property="Background" Value="{StaticResource RmAccentMutedBrush}" />
+                                    <Setter TargetName="Bar" Property="Visibility" Value="Visible" />
+                                    <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- ===== Device list card ===== -->
+            <Style x:Key="DeviceCardStyle" TargetType="ListBoxItem">
+                <Setter Property="Margin" Value="0,0,0,8" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                <Setter Property="Cursor" Value="Hand" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ListBoxItem">
+                            <Border x:Name="Bd" Background="{StaticResource RmCardBrush}"
+                                    BorderBrush="{StaticResource RmCardBorderBrush}" BorderThickness="1"
+                                    CornerRadius="10" Padding="14,12">
+                                <ContentPresenter />
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Bd" Property="BorderBrush" Value="#3C434F" />
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource RmAccentBrush}" />
+                                    <Setter TargetName="Bd" Property="Background" Value="{StaticResource RmAccentMutedBrush}" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
