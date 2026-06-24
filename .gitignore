@@ -426,9 +426,9 @@ test-results/
 *.dmg
 *.app
 
-# RapidMacro: the macOS "*.app" rule above also matches our project folder
-# (RapidMacro.App), which would wrongly exclude the whole WPF project. Re-include it.
-!src/RapidMacro.App/
+# Macrofy: the macOS "*.app" rule above also matches our project folder
+# (Macrofy.App), which would wrongly exclude the whole WPF project. Re-include it.
+!src/Macrofy.App/
 
 # content below from: https://github.com/github/gitignore/blob/master/Global/macOS.gitignore
 # General

@@ -2,7 +2,7 @@
 using System.Data;
 using System.Windows;
 
-namespace RapidMacro.App;
+namespace Macrofy.App;
 
 /// <summary>
 /// Interaction logic for App.xaml

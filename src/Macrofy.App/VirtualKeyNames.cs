@@ -1,9 +1,6 @@
-namespace RapidMacro.App;
+namespace Macrofy.App;
 
-/// <summary>
-/// Friendly names for the common virtual-key codes, so the live key log reads
-/// "Numpad7" instead of "VK 0x67". Not exhaustive — unknown keys fall back to hex.
-/// </summary>
+// Friendly names for common virtual-key codes; unknown keys fall back to hex.
 public static class VirtualKeyNames
 {
     public static string Name(int vk) => vk switch

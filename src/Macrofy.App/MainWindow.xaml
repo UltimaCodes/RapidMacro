@@ -1,0 +1,387 @@
+<ui:FluentWindow x:Class="Macrofy.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        xmlns:local="clr-namespace:Macrofy.App"
+        mc:Ignorable="d"
+        Title="Macrofy"
+        Height="780" Width="1160" MinHeight="660" MinWidth="1020"
+        WindowStartupLocation="CenterScreen"
+        ExtendsContentIntoTitleBar="True"
+        WindowBackdropType="None"
+        Background="{StaticResource RmWindowBrush}">
+
+    <ui:FluentWindow.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        <local:EmptyToVisibilityConverter x:Key="EmptyToVis" />
+        <local:InverseBoolToVisibilityConverter x:Key="InverseBoolToVis" />
+
+        <!-- One key on the visual keyboard -->
+        <DataTemplate x:Key="KeyCapTemplate">
+            <Border Width="{Binding Width}" Height="30" Background="Transparent">
+                <Border x:Name="cap" Margin="1.5" CornerRadius="5"
+                        Background="{StaticResource RmCardBrush}"
+                        BorderBrush="{StaticResource RmCardBorderBrush}" BorderThickness="1">
+                    <TextBlock x:Name="lbl" Text="{Binding Label}" FontSize="10" Margin="2,0"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis" />
+                </Border>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsSpacer}" Value="True">
+                    <Setter TargetName="cap" Property="Background" Value="Transparent" />
+                    <Setter TargetName="cap" Property="BorderThickness" Value="0" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsPressed}" Value="True">
+                    <Setter TargetName="cap" Property="Background" Value="{StaticResource RmAccentBrush}" />
+                    <Setter TargetName="cap" Property="BorderBrush" Value="{StaticResource RmAccentBrush}" />
+                    <Setter TargetName="lbl" Property="Foreground" Value="#06201C" />
+                    <Setter TargetName="lbl" Property="FontWeight" Value="SemiBold" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!-- One keyboard row -->
+        <DataTemplate x:Key="KeyRowTemplate">
+            <ItemsControl ItemsSource="{Binding}" ItemTemplate="{StaticResource KeyCapTemplate}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+        </DataTemplate>
+    </ui:FluentWindow.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <ui:TitleBar Grid.Row="0" Title="Macrofy" />
+
+        <!-- Body: sidebar panel + content panel -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="232" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- SIDEBAR PANEL -->
+            <Border Grid.Column="0" Background="{StaticResource RmSidebarBrush}"
+                    CornerRadius="12" Margin="8,0,4,0">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="18,18,18,20">
+                        <Border Width="36" Height="36" CornerRadius="9" Background="{StaticResource RmAccentBrush}">
+                            <ui:SymbolIcon Symbol="Keyboard24" FontSize="20" Foreground="#06201C"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="Macrofy" FontSize="16" FontWeight="Bold" />
+                            <TextBlock Text="macro pad" FontSize="11"
+                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <TextBlock DockPanel.Dock="Bottom" Margin="22,0,0,16" FontSize="11"
+                               Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                               Text="Phase 1 + 2 · driver-free" />
+
+                    <StackPanel>
+                        <RadioButton x:Name="NavDevices" GroupName="Nav" Style="{StaticResource NavItemStyle}"
+                                     IsChecked="True">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="Keyboard24" FontSize="18" />
+                                <TextBlock Text="Devices" Margin="12,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton x:Name="NavAbout" GroupName="Nav" Style="{StaticResource NavItemStyle}">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="Info24" FontSize="18" />
+                                <TextBlock Text="About" Margin="12,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </RadioButton>
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+
+            <!-- CONTENT PANEL -->
+            <Border Grid.Column="1" Background="{StaticResource RmPanelBrush}"
+                    CornerRadius="12" Margin="4,0,8,0">
+                <Grid>
+
+                    <!-- DEVICES VIEW -->
+                    <Grid Margin="28,22,28,22"
+                          Visibility="{Binding IsChecked, ElementName=NavDevices, Converter={StaticResource BoolToVis}}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <!-- Header -->
+                        <Grid Grid.Row="0" Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Text="Devices" FontSize="26" FontWeight="Bold" />
+                                <TextBlock Margin="0,2,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                           Text="Pick a keyboard, toggle capture, then press its keys to test isolation." />
+                            </StackPanel>
+                            <ui:Button x:Name="RefreshButton" Click="RefreshButton_Click"
+                                       HorizontalAlignment="Right" VerticalAlignment="Top"
+                                       Icon="{ui:SymbolIcon ArrowSync24}" Content="Refresh" />
+                        </Grid>
+
+                        <!-- Device list + capture card -->
+                        <Grid Grid.Row="1" Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="340" />
+                                <ColumnDefinition Width="24" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <DockPanel Grid.Column="0">
+                                <TextBlock DockPanel.Dock="Top" Text="DETECTED KEYBOARDS" FontSize="11"
+                                           FontWeight="SemiBold" Margin="2,0,0,8"
+                                           Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                                <ui:ToggleSwitch DockPanel.Dock="Top" Content="Show non-keyboard devices"
+                                                 FontSize="12" Margin="0,0,0,10"
+                                                 IsChecked="{Binding ShowAllDevices, Mode=TwoWay}" />
+                                <Grid>
+                                    <ListBox ItemsSource="{Binding Keyboards}"
+                                             SelectedItem="{Binding SelectedKeyboard, Mode=TwoWay}"
+                                             ItemContainerStyle="{StaticResource DeviceCardStyle}"
+                                             Background="Transparent" BorderThickness="0" MaxHeight="220"
+                                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <Border Grid.Column="0" Width="40" Height="40" CornerRadius="9"
+                                                            Background="#1FFFFFFF" Margin="0,0,12,0">
+                                                        <ui:SymbolIcon Symbol="Keyboard24" FontSize="20"
+                                                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                    </Border>
+                                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold"
+                                                                   TextTrimming="CharacterEllipsis" />
+                                                        <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                                            <TextBlock FontSize="11"
+                                                                       Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                                       Text="{Binding CollectionCount, StringFormat='{}{0} HID collection(s)'}" />
+                                                            <Border Margin="8,0,0,0" CornerRadius="4" Padding="5,1"
+                                                                    Background="#33FF6B6B"
+                                                                    Visibility="{Binding IsLikelyKeyboard, Converter={StaticResource InverseBoolToVis}}">
+                                                                <TextBlock Text="not a keyboard" FontSize="10" Foreground="#FFC2C2" />
+                                                            </Border>
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                    <TextBlock VerticalAlignment="Top" Margin="2,4,0,0"
+                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                               TextWrapping="Wrap"
+                                               Visibility="{Binding Keyboards.Count, Converter={StaticResource EmptyToVis}}"
+                                               Text="No keyboards detected. Plug one in and hit Refresh." />
+                                </Grid>
+                            </DockPanel>
+
+                            <Grid Grid.Column="2" VerticalAlignment="Top">
+                                <ui:Card Visibility="{Binding HasSelection, Converter={StaticResource BoolToVis}}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                                            <TextBlock Text="{Binding SelectedKeyboard.DisplayName}"
+                                                       FontSize="18" FontWeight="SemiBold"
+                                                       TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{Binding StatusText}" Margin="0,6,0,0" TextWrapping="Wrap"
+                                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                                            <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                                                <ui:TextBox PlaceholderText="Rename this keyboard…" Width="240"
+                                                            Text="{Binding RenameText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                                <ui:Button Content="Save name" Margin="8,0,0,0"
+                                                           Click="RenameButton_Click" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                        <ui:ToggleSwitch Grid.Column="1" VerticalAlignment="Center"
+                                                         Focusable="False"
+                                                         IsChecked="{Binding IsCapturing, Mode=TwoWay}"
+                                                         IsEnabled="{Binding HasSelection}" Content="Capture" />
+                                    </Grid>
+                                </ui:Card>
+                                <StackPanel Visibility="{Binding HasSelection, Converter={StaticResource InverseBoolToVis}}"
+                                            VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,24,0,0">
+                                    <ui:SymbolIcon Symbol="CursorClick24" FontSize="28" HorizontalAlignment="Center"
+                                                   Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                                    <TextBlock Margin="0,8,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                               Text="Select a keyboard on the left." />
+                                </StackPanel>
+                            </Grid>
+                        </Grid>
+
+                        <!-- Keyboard tester (left, prominent) + live key bar (right) -->
+                        <Grid Grid.Row="2" Visibility="{Binding HasSelection, Converter={StaticResource BoolToVis}}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="16" />
+                                <ColumnDefinition Width="300" />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- TEST -->
+                            <Border Grid.Column="0" Background="{StaticResource RmCardBrush}"
+                                    BorderBrush="{StaticResource RmCardBorderBrush}" BorderThickness="1"
+                                    CornerRadius="12" Padding="20,16">
+                                <DockPanel>
+                                    <TextBlock DockPanel.Dock="Top"
+                                               Text="TEST — keys light up as you press them on the captured device"
+                                               FontSize="11" FontWeight="SemiBold" Margin="2,0,0,12"
+                                               Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                                    <Viewbox Stretch="Uniform" StretchDirection="Both"
+                                             HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <ItemsControl ItemsSource="{Binding KeyboardLayout.Rows}"
+                                                      ItemTemplate="{StaticResource KeyRowTemplate}" />
+                                    </Viewbox>
+                                </DockPanel>
+                            </Border>
+
+                            <!-- LIVE KEYS bar -->
+                            <Border Grid.Column="2" Background="{StaticResource RmCardBrush}"
+                                    BorderBrush="{StaticResource RmCardBorderBrush}" BorderThickness="1"
+                                    CornerRadius="12">
+                                <DockPanel>
+                                    <Grid DockPanel.Dock="Top" Margin="16,14,12,10">
+                                        <TextBlock Text="LIVE KEYS" FontSize="11" FontWeight="SemiBold"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                                        <ui:Button Content="Clear" Appearance="Secondary" Padding="10,4"
+                                                   HorizontalAlignment="Right" Click="ClearButton_Click" />
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock Margin="16,4,16,0" VerticalAlignment="Top" TextWrapping="Wrap"
+                                                   Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                   Visibility="{Binding KeyLog.Count, Converter={StaticResource EmptyToVis}}"
+                                                   Text="Turn on capture, then press keys — they appear here instead of typing into your apps." />
+                                        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="12,2,12,12">
+                                            <ItemsControl ItemsSource="{Binding KeyLog}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border Margin="0,0,0,6" Padding="10,6" CornerRadius="6"
+                                                                Background="#14FFFFFF">
+                                                            <StackPanel>
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <TextBlock Text="{Binding Glyph}" FontSize="12"
+                                                                               Margin="0,0,8,0" VerticalAlignment="Center">
+                                                                        <TextBlock.Style>
+                                                                            <Style TargetType="TextBlock">
+                                                                                <Setter Property="Foreground" Value="{DynamicResource TextFillColorTertiaryBrush}" />
+                                                                                <Style.Triggers>
+                                                                                    <DataTrigger Binding="{Binding IsDown}" Value="True">
+                                                                                        <Setter Property="Foreground" Value="{StaticResource RmAccentBrush}" />
+                                                                                    </DataTrigger>
+                                                                                </Style.Triggers>
+                                                                            </Style>
+                                                                        </TextBlock.Style>
+                                                                    </TextBlock>
+                                                                    <TextBlock Text="{Binding Time}" FontFamily="Consolas"
+                                                                               FontSize="11" VerticalAlignment="Center"
+                                                                               Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                                                                </StackPanel>
+                                                                <TextBlock Text="{Binding KeyText}" FontFamily="Consolas"
+                                                                           FontSize="12" TextWrapping="Wrap" Margin="0,3,0,0" />
+                                                            </StackPanel>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </ScrollViewer>
+                                    </Grid>
+                                </DockPanel>
+                            </Border>
+                        </Grid>
+                    </Grid>
+
+                    <!-- ABOUT VIEW -->
+                    <Grid Margin="28,22,28,22" MaxWidth="660" HorizontalAlignment="Left"
+                          Visibility="{Binding IsChecked, ElementName=NavAbout, Converter={StaticResource BoolToVis}}">
+                        <StackPanel>
+                            <TextBlock Text="About" FontSize="26" FontWeight="Bold" Margin="0,0,0,12" />
+                            <ui:Card Margin="0,0,0,12">
+                                <StackPanel>
+                                    <TextBlock Text="How capture works" FontWeight="SemiBold" Margin="0,0,0,6" />
+                                    <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                               Text="Macrofy uses Raw Input to tell which physical keyboard each keystroke came from, and a low-level keyboard hook to swallow the captured device's keys before any app sees them. No drivers, no kernel components." />
+                                </StackPanel>
+                            </ui:Card>
+                            <ui:Card>
+                                <StackPanel>
+                                    <TextBlock Text="What's next" FontWeight="SemiBold" Margin="0,0,0,6" />
+                                    <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                               Text="Phase 3 adds the macro engine — bind each captured key to an action (launch app, send a hotkey, type text, media controls), saved as JSON profiles." />
+                                </StackPanel>
+                            </ui:Card>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- BOTTOM STATUS BAR -->
+        <Border Grid.Row="2" Background="{StaticResource RmSidebarBrush}" CornerRadius="12"
+                Margin="8,8,8,8" Height="62">
+            <Grid Margin="18,0">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Width="38" Height="38" CornerRadius="9" Background="{StaticResource RmCardBrush}">
+                        <ui:SymbolIcon Symbol="Keyboard24" FontSize="18"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                        <TextBlock FontWeight="SemiBold"
+                                   Text="{Binding SelectedKeyboard.DisplayName, TargetNullValue='No device selected'}" />
+                        <TextBlock FontSize="11" MaxWidth="640" TextTrimming="CharacterEllipsis"
+                                   Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                   Text="{Binding StatusText}" />
+                    </StackPanel>
+                </StackPanel>
+
+                <Border HorizontalAlignment="Right" VerticalAlignment="Center" CornerRadius="14" Padding="14,6">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Background" Value="#22FFFFFF" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsCapturing}" Value="True">
+                                    <Setter Property="Background" Value="{StaticResource RmAccentBrush}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <TextBlock VerticalAlignment="Center" FontWeight="SemiBold" FontSize="12">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Text" Value="Idle" />
+                                <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsCapturing}" Value="True">
+                                        <Setter Property="Text" Value="Capturing" />
+                                        <Setter Property="Foreground" Value="#06201C" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</ui:FluentWindow>

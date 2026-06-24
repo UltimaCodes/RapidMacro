@@ -1,8 +1,8 @@
-<Application x:Class="RapidMacro.App.App"
+<Application x:Class="Macrofy.App.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-             xmlns:local="clr-namespace:RapidMacro.App"
+             xmlns:local="clr-namespace:Macrofy.App"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
@@ -11,31 +11,29 @@
                 <ui:ControlsDictionary />
             </ResourceDictionary.MergedDictionaries>
 
-            <!-- ===== Brand identity (teal accent, our own — not Wooting orange) ===== -->
+            <!-- Palette: Spotify-style near-black with floating panels; teal accent (ours). -->
             <Color x:Key="RmAccentColor">#2DD4BF</Color>
             <SolidColorBrush x:Key="RmAccentBrush" Color="{StaticResource RmAccentColor}" />
             <SolidColorBrush x:Key="RmAccentMutedBrush" Color="#262DD4BF" />
-            <SolidColorBrush x:Key="RmSidebarBrush" Color="#CC101218" />
-            <SolidColorBrush x:Key="RmCardBrush" Color="#1A1D24" />
-            <SolidColorBrush x:Key="RmCardBorderBrush" Color="#2A2E38" />
-            <SolidColorBrush x:Key="RmHoverBrush" Color="#1AFFFFFF" />
+            <SolidColorBrush x:Key="RmWindowBrush" Color="#0A0A0B" />
+            <SolidColorBrush x:Key="RmSidebarBrush" Color="#000000" />
+            <SolidColorBrush x:Key="RmPanelBrush" Color="#121316" />
+            <SolidColorBrush x:Key="RmCardBrush" Color="#1C1D22" />
+            <SolidColorBrush x:Key="RmCardBorderBrush" Color="#2A2C33" />
+            <SolidColorBrush x:Key="RmHoverBrush" Color="#14FFFFFF" />
 
-            <!-- ===== Left-rail navigation item ===== -->
+            <!-- Left-rail navigation item (pill) -->
             <Style x:Key="NavItemStyle" TargetType="RadioButton">
                 <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
                 <Setter Property="FontSize" Value="14" />
+                <Setter Property="FontWeight" Value="SemiBold" />
                 <Setter Property="Cursor" Value="Hand" />
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="RadioButton">
-                            <Border x:Name="Bd" Background="Transparent" CornerRadius="8"
-                                    Margin="10,2" Padding="12,9">
-                                <Grid>
-                                    <Border x:Name="Bar" Width="3" Height="18" HorizontalAlignment="Left"
-                                            CornerRadius="2" Background="{StaticResource RmAccentBrush}"
-                                            Visibility="Collapsed" />
-                                    <ContentPresenter Margin="12,0,0,0" VerticalAlignment="Center" />
-                                </Grid>
+                            <Border x:Name="Bd" Background="Transparent" CornerRadius="22"
+                                    Margin="10,2" Padding="14,9">
+                                <ContentPresenter VerticalAlignment="Center" />
                             </Border>
                             <ControlTemplate.Triggers>
                                 <MultiTrigger>
@@ -47,8 +45,7 @@
                                 </MultiTrigger>
                                 <Trigger Property="IsChecked" Value="True">
                                     <Setter TargetName="Bd" Property="Background" Value="{StaticResource RmAccentMutedBrush}" />
-                                    <Setter TargetName="Bar" Property="Visibility" Value="Visible" />
-                                    <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+                                    <Setter Property="Foreground" Value="{StaticResource RmAccentBrush}" />
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
@@ -56,7 +53,7 @@
                 </Setter>
             </Style>
 
-            <!-- ===== Device list card ===== -->
+            <!-- Device list card -->
             <Style x:Key="DeviceCardStyle" TargetType="ListBoxItem">
                 <Setter Property="Margin" Value="0,0,0,8" />
                 <Setter Property="Padding" Value="0" />

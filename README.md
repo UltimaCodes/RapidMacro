@@ -1,8 +1,8 @@
-# RapidMacro
+# Macrofy
 
 Turn a spare keyboard or numpad into a macro pad on Windows.
 
-Plug in two keyboards. RapidMacro **captures one of them** (say, a numpad) and
+Plug in two keyboards. Macrofy **captures one of them** (say, a numpad) and
 turns it into a Stream Deck–style macro pad — its keys stop typing and become
 triggers — while your **other keyboard keeps working normally**.
 
@@ -33,7 +33,7 @@ This is the part that makes or breaks the project.
 - **A low-level keyboard hook (`WH_KEYBOARD_LL`)** can suppress keys, but is global
   and carries no device information.
 
-### How RapidMacro does it (driver-free)
+### How Macrofy does it (driver-free)
 
 It combines the two, on two cooperating threads:
 
@@ -54,7 +54,7 @@ without touching the rest of the app.
 
 ## Using it
 
-1. `dotnet run --project src/RapidMacro.App`
+1. `dotnet run --project src/Macrofy.App`
 2. On **Devices**, your keyboards are listed (named by VID/PID). Pick one.
 3. Toggle **Capture**. Now press keys on that keyboard — they appear in the live
    log *instead of typing* into your apps. Your other keyboard is unaffected.
@@ -63,12 +63,12 @@ without touching the rest of the app.
 ## Project layout
 
 ```
-RapidMacro.sln
+Macrofy.sln
 src/
-  RapidMacro.App/         WPF (.NET 8) UI — left-rail shell + Devices view
+  Macrofy.App/         WPF (.NET 8) UI — left-rail shell + Devices view
     ViewModels/           MainViewModel, KeyLogEntry, ObservableObject
     MainWindow.xaml       the shell, device list, capture toggle, live key log
-  RapidMacro.Core/        Input capture + models — no UI dependency
+  Macrofy.Core/        Input capture + models — no UI dependency
     Input/
       IInputBackend.cs            abstraction over the capture mechanism
       RawInputHookBackend.cs      driver-free capture engine (Raw Input + hook)
@@ -92,7 +92,7 @@ src/
 
 ```powershell
 dotnet build
-dotnet run --project src/RapidMacro.App
+dotnet run --project src/Macrofy.App
 ```
 
 Requires the .NET 8 SDK on Windows.

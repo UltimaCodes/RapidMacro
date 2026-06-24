@@ -1,8 +1,8 @@
-using RapidMacro.Core.Input;
+using Macrofy.Core.Input;
 
-namespace RapidMacro.App.ViewModels;
+namespace Macrofy.App.ViewModels;
 
-/// <summary>One row in the live key log shown while a device is captured.</summary>
+// One row in the live key log.
 public sealed record KeyLogEntry(string Time, string Glyph, string KeyText, bool IsDown)
 {
     public static KeyLogEntry From(DeviceKeyEvent e) => new(

@@ -1,13 +1,10 @@
 using System.Windows;
-using RapidMacro.App.ViewModels;
-using RapidMacro.Core.Input;
+using Macrofy.App.ViewModels;
+using Macrofy.Core.Input;
 using Wpf.Ui.Controls;
 
-namespace RapidMacro.App;
+namespace Macrofy.App;
 
-/// <summary>
-/// Interaction logic for MainWindow.xaml
-/// </summary>
 public partial class MainWindow : FluentWindow
 {
     private readonly MainViewModel _viewModel;
@@ -27,4 +24,7 @@ public partial class MainWindow : FluentWindow
 
     private void ClearButton_Click(object sender, RoutedEventArgs e)
         => _viewModel.ClearLog();
+
+    private void RenameButton_Click(object sender, RoutedEventArgs e)
+        => _viewModel.RenameSelected();
 }

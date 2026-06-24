@@ -2,9 +2,9 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 
-namespace RapidMacro.App;
+namespace Macrofy.App;
 
-/// <summary>Visible when the bound count is zero (for empty-state placeholders).</summary>
+// Visible when the bound count is zero (empty-state placeholders).
 public sealed class EmptyToVisibilityConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
@@ -14,7 +14,7 @@ public sealed class EmptyToVisibilityConverter : IValueConverter
         => throw new NotSupportedException();
 }
 
-/// <summary>Visible when the bound bool is <c>false</c> (inverse of the built-in).</summary>
+// Visible when the bound bool is false (inverse of the built-in).
 public sealed class InverseBoolToVisibilityConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)

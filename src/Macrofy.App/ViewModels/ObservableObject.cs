@@ -1,9 +1,8 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace RapidMacro.App.ViewModels;
+namespace Macrofy.App.ViewModels;
 
-/// <summary>Minimal INotifyPropertyChanged base for the view-models.</summary>
 public abstract class ObservableObject : INotifyPropertyChanged
 {
     public event PropertyChangedEventHandler? PropertyChanged;

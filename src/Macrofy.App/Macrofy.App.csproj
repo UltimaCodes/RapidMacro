@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\RapidMacro.Core\RapidMacro.Core.csproj" />
+    <ProjectReference Include="..\Macrofy.Core\Macrofy.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
