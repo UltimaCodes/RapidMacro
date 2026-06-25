@@ -58,6 +58,17 @@ public sealed class MacroProfileStore
     public void Export(MacroProfile profile, string path)
         => File.WriteAllText(path, JsonSerializer.Serialize(profile, Options));
 
+    // Delete every saved profile (Reset all macros). Best effort.
+    public void DeleteAll()
+    {
+        try
+        {
+            foreach (var f in Directory.GetFiles(_dir, "*.json"))
+                File.Delete(f);
+        }
+        catch { /* best effort */ }
+    }
+
     // Read a profile from an arbitrary path. Returns null if the file isn't a valid profile.
     public MacroProfile? Import(string path)
     {

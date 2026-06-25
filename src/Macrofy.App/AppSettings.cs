@@ -14,6 +14,19 @@ public sealed class AppSettings
     // When true, closing the window hides Macrofy to the tray; when false, closing quits.
     public bool MinimizeToTrayOnClose { get; set; } = true;
 
+    // Auto-capture a chosen keyboard at launch (makes run-at-login genuinely always-on).
+    public bool AutoCaptureOnLaunch { get; set; }
+    public string? AutoCaptureDeviceId { get; set; }
+
+    // Start hidden in the tray even when launched normally (not just via --minimized).
+    public bool StartMinimized { get; set; }
+
+    // Toggle capture on the selected keyboard with a system-wide hotkey (Ctrl+Alt+F10).
+    public bool GlobalHotkeyEnabled { get; set; }
+
+    // Show the "still running in the tray" balloon when minimizing to tray.
+    public bool ShowTrayNotifications { get; set; } = true;
+
     public static AppSettings Load()
     {
         try

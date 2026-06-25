@@ -632,6 +632,94 @@
                                                          IsChecked="{Binding MinimizeToTrayOnClose, Mode=TwoWay}" />
                                     </Grid>
                                 </ui:Card>
+
+                                <ui:Card Margin="0,12,0,0">
+                                    <StackPanel>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                                                <TextBlock Text="Auto-capture a keyboard at startup" FontWeight="SemiBold" />
+                                                <TextBlock TextWrapping="Wrap" FontSize="12" Margin="0,3,0,0"
+                                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                           Text="When Macrofy starts, immediately capture the keyboard below — your macros are live without opening the window. Pairs well with 'Start with Windows'." />
+                                            </StackPanel>
+                                            <ui:ToggleSwitch Grid.Column="1" VerticalAlignment="Center"
+                                                             IsChecked="{Binding AutoCaptureOnLaunch, Mode=TwoWay}" />
+                                        </Grid>
+                                        <ComboBox Margin="0,10,0,0" ItemsSource="{Binding Keyboards}"
+                                                  DisplayMemberPath="DisplayName"
+                                                  SelectedItem="{Binding AutoCaptureDevice, Mode=TwoWay}"
+                                                  IsEnabled="{Binding AutoCaptureOnLaunch}" />
+                                    </StackPanel>
+                                </ui:Card>
+
+                                <ui:Card Margin="0,12,0,0">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                                            <TextBlock Text="Start minimized" FontWeight="SemiBold" />
+                                            <TextBlock TextWrapping="Wrap" FontSize="12" Margin="0,3,0,0"
+                                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                       Text="Launch hidden in the tray even when you start Macrofy yourself." />
+                                        </StackPanel>
+                                        <ui:ToggleSwitch Grid.Column="1" VerticalAlignment="Center"
+                                                         IsChecked="{Binding StartMinimized, Mode=TwoWay}" />
+                                    </Grid>
+                                </ui:Card>
+
+                                <ui:Card Margin="0,12,0,0">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                                            <TextBlock Text="Global capture hotkey" FontWeight="SemiBold" />
+                                            <TextBlock TextWrapping="Wrap" FontSize="12" Margin="0,3,0,0"
+                                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                       Text="Press Ctrl + Alt + F10 anywhere to turn capture on or off for the selected keyboard — handy right before launching a game." />
+                                        </StackPanel>
+                                        <ui:ToggleSwitch Grid.Column="1" VerticalAlignment="Center"
+                                                         IsChecked="{Binding GlobalHotkeyEnabled, Mode=TwoWay}" />
+                                    </Grid>
+                                </ui:Card>
+
+                                <ui:Card Margin="0,12,0,0">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                                            <TextBlock Text="Show tray notifications" FontWeight="SemiBold" />
+                                            <TextBlock TextWrapping="Wrap" FontSize="12" Margin="0,3,0,0"
+                                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                       Text="Show a brief notification when Macrofy hides to the tray." />
+                                        </StackPanel>
+                                        <ui:ToggleSwitch Grid.Column="1" VerticalAlignment="Center"
+                                                         IsChecked="{Binding ShowTrayNotifications, Mode=TwoWay}" />
+                                    </Grid>
+                                </ui:Card>
+
+                                <ui:Card Margin="0,12,0,0">
+                                    <StackPanel>
+                                        <TextBlock Text="Files &amp; reset" FontWeight="SemiBold" />
+                                        <TextBlock TextWrapping="Wrap" FontSize="12" Margin="0,3,0,0"
+                                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                   Text="Macrofy keeps device names, macro profiles and layouts in your AppData folder." />
+                                        <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                                            <ui:Button Content="Open config folder" Click="OpenConfigFolderButton_Click" />
+                                            <ui:Button Content="Reset all macros" Appearance="Danger" Margin="8,0,0,0"
+                                                       Click="ResetAllMacrosButton_Click" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </ui:Card>
                             </StackPanel>
                         </ScrollViewer>
                     </Grid>

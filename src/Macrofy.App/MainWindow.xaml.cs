@@ -1,7 +1,10 @@
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using Macrofy.App.ViewModels;
@@ -37,7 +40,47 @@ public partial class MainWindow : FluentWindow
         AddHandler(Keyboard.GotKeyboardFocusEvent, new KeyboardFocusChangedEventHandler(OnKeyboardFocusChanged), handledEventsToo: true);
         AddHandler(Keyboard.LostKeyboardFocusEvent, new KeyboardFocusChangedEventHandler(OnKeyboardFocusChanged), handledEventsToo: true);
 
+        _viewModel.GlobalHotkeyToggled += (_, _) => ApplyGlobalHotkey();
         Closed += (_, _) => _viewModel.Dispose();
+
+        // Force the window handle so the global hotkey can register even if we launch hidden.
+        new WindowInteropHelper(this).EnsureHandle();
+    }
+
+    // ---- global capture hotkey (Ctrl+Alt+F10) ----
+
+    [DllImport("user32.dll")] private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
+    [DllImport("user32.dll")] private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+
+    private const int HotkeyId = 0xB001;
+    private const uint ModAlt = 0x1, ModControl = 0x2, ModNoRepeat = 0x4000, VkF10 = 0x79;
+    private const int WmHotkey = 0x0312;
+
+    protected override void OnSourceInitialized(EventArgs e)
+    {
+        base.OnSourceInitialized(e);
+        HwndSource.FromHwnd(new WindowInteropHelper(this).Handle)?.AddHook(WndHook);
+        ApplyGlobalHotkey();
+    }
+
+    private IntPtr WndHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        if (msg == WmHotkey && wParam.ToInt32() == HotkeyId)
+        {
+            _viewModel.ToggleCaptureHotkey();
+            handled = true;
+        }
+        return IntPtr.Zero;
+    }
+
+    private void ApplyGlobalHotkey()
+    {
+        IntPtr handle = new WindowInteropHelper(this).Handle;
+        if (handle == IntPtr.Zero)
+            return;
+        UnregisterHotKey(handle, HotkeyId);
+        if (_viewModel.GlobalHotkeyEnabled)
+            RegisterHotKey(handle, HotkeyId, ModControl | ModAlt | ModNoRepeat, VkF10);
     }
 
     private void OnKeyboardFocusChanged(object sender, KeyboardFocusChangedEventArgs e)
@@ -50,7 +93,7 @@ public partial class MainWindow : FluentWindow
         _autoStartItem = new System.Windows.Forms.ToolStripMenuItem("Start with Windows");
         _autoStartItem.Click += (_, _) => AutoStartManager.SetEnabled(!AutoStartManager.IsEnabled);
 
-        var open = new System.Windows.Forms.ToolStripMenuItem("Open Macrofy", null, (_, _) => ShowFromTray())
+        var open = new System.Windows.Forms.ToolStripMenuItem("Open Macrofy", null, (_, _) => BringToFront())
         {
             Font = new System.Drawing.Font("Segoe UI Semibold", 9.5f),
         };
@@ -84,7 +127,7 @@ public partial class MainWindow : FluentWindow
             Visible = true,
             ContextMenuStrip = menu,
         };
-        _tray.DoubleClick += (_, _) => ShowFromTray();
+        _tray.DoubleClick += (_, _) => BringToFront();
     }
 
     private static System.Drawing.Icon LoadTrayIcon()
@@ -99,7 +142,7 @@ public partial class MainWindow : FluentWindow
         return System.Drawing.SystemIcons.Application;
     }
 
-    private void ShowFromTray()
+    public void BringToFront()
     {
         Show();
         WindowState = WindowState.Normal;
@@ -122,7 +165,7 @@ public partial class MainWindow : FluentWindow
         {
             e.Cancel = true;
             Hide();
-            if (!OnboardingState.HasSeen(TrayHintFlag))
+            if (_viewModel.ShowTrayNotifications && !OnboardingState.HasSeen(TrayHintFlag))
             {
                 OnboardingState.MarkSeen(TrayHintFlag);
                 _tray?.ShowBalloonTip(3000, "Macrofy is still running",
@@ -255,6 +298,27 @@ public partial class MainWindow : FluentWindow
     {
         if (sender is FrameworkElement { DataContext: MacroStep step })
             _viewModel.RemoveStep(step);
+    }
+
+    private void OpenConfigFolderButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            string dir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Macrofy");
+            Directory.CreateDirectory(dir);
+            Process.Start(new ProcessStartInfo(dir) { UseShellExecute = true });
+        }
+        catch { /* best effort */ }
+    }
+
+    private void ResetAllMacrosButton_Click(object sender, RoutedEventArgs e)
+    {
+        var confirm = System.Windows.MessageBox.Show(this,
+            "This deletes the macros for every keyboard (layers and bindings). Device names and layouts are kept. This can't be undone.",
+            "Reset all macros", System.Windows.MessageBoxButton.OKCancel, System.Windows.MessageBoxImage.Warning);
+        if (confirm == System.Windows.MessageBoxResult.OK)
+            _viewModel.ResetAllMacros();
     }
 
     private void ExportProfileButton_Click(object sender, RoutedEventArgs e)

@@ -74,6 +74,21 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _drainTimer.Start();
 
         RefreshDevices();
+        ApplyAutoCapture();
+    }
+
+    // At launch, if enabled, select the chosen keyboard and start capturing it so an autostarted
+    // Macrofy is immediately live without opening the window. Runs before the window subscribes
+    // to CaptureEngaged, so the first-run key hint won't pop during a silent startup.
+    private void ApplyAutoCapture()
+    {
+        if (!_settings.AutoCaptureOnLaunch || string.IsNullOrEmpty(_settings.AutoCaptureDeviceId))
+            return;
+        var device = Keyboards.FirstOrDefault(k => k.Id == _settings.AutoCaptureDeviceId);
+        if (device is null)
+            return;
+        SelectedKeyboard = device;
+        IsCapturing = true;
     }
 
     private KeyboardDevice? _selectedKeyboard;
@@ -434,6 +449,82 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             _settings.Save();
             OnPropertyChanged();
         }
+    }
+
+    public bool StartMinimized
+    {
+        get => _settings.StartMinimized;
+        set { if (value != _settings.StartMinimized) { _settings.StartMinimized = value; _settings.Save(); OnPropertyChanged(); } }
+    }
+
+    public bool ShowTrayNotifications
+    {
+        get => _settings.ShowTrayNotifications;
+        set { if (value != _settings.ShowTrayNotifications) { _settings.ShowTrayNotifications = value; _settings.Save(); OnPropertyChanged(); } }
+    }
+
+    // Raised when the global-hotkey setting changes so the window can (un)register it live.
+    public event EventHandler? GlobalHotkeyToggled;
+
+    public bool GlobalHotkeyEnabled
+    {
+        get => _settings.GlobalHotkeyEnabled;
+        set
+        {
+            if (value == _settings.GlobalHotkeyEnabled)
+                return;
+            _settings.GlobalHotkeyEnabled = value;
+            _settings.Save();
+            OnPropertyChanged();
+            GlobalHotkeyToggled?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    // Invoked by the global hotkey — flip capture on the selected keyboard.
+    public void ToggleCaptureHotkey()
+    {
+        if (_selectedKeyboard is not null)
+            IsCapturing = !_isCapturing;
+    }
+
+    // ---- auto-capture selection (Settings tab) ----
+
+    public bool AutoCaptureOnLaunch
+    {
+        get => _settings.AutoCaptureOnLaunch;
+        set
+        {
+            if (value == _settings.AutoCaptureOnLaunch)
+                return;
+            _settings.AutoCaptureOnLaunch = value;
+            // Default the target to the current keyboard the first time it's switched on.
+            if (value && string.IsNullOrEmpty(_settings.AutoCaptureDeviceId))
+                _settings.AutoCaptureDeviceId = _selectedKeyboard?.Id;
+            _settings.Save();
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(AutoCaptureDevice));
+        }
+    }
+
+    public KeyboardDevice? AutoCaptureDevice
+    {
+        get => Keyboards.FirstOrDefault(k => k.Id == _settings.AutoCaptureDeviceId);
+        set
+        {
+            _settings.AutoCaptureDeviceId = value?.Id;
+            _settings.Save();
+            OnPropertyChanged();
+        }
+    }
+
+    // ---- reset ----
+
+    public void ResetAllMacros()
+    {
+        _profileStore.DeleteAll();
+        LoadProfileForSelected();
+        if (_isCapturing && _profile is not null)
+            _macroEngine.SetProfile(_profile);
     }
 
     // ---- keyboard layout + learn/calibrate ----
