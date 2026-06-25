@@ -19,11 +19,39 @@ public partial class App : Application
         _mutex = new Mutex(initiallyOwned: true, MutexName, out bool createdNew);
         if (!createdNew)
         {
-            // Already running — poke the live instance to come to the front, then bow out.
-            try { EventWaitHandle.OpenExisting(ShowEventName).Set(); } catch { /* it'll be there next time */ }
-            Shutdown();
-            return;
+            // An elevated "Restart as administrator" hands off: the old instance is exiting, so
+            // wait briefly for the lock instead of bowing out.
+            bool relaunch = e.Args.Any(a => string.Equals(a, "--relaunch", StringComparison.OrdinalIgnoreCase));
+            if (relaunch)
+            {
+                try { createdNew = _mutex.WaitOne(TimeSpan.FromSeconds(5)); }
+                catch (AbandonedMutexException) { createdNew = true; }
+            }
+            if (!createdNew)
+            {
+                // Already running — poke the live instance to come to the front, then bow out.
+                try { EventWaitHandle.OpenExisting(ShowEventName).Set(); } catch { /* it'll be there next time */ }
+                Shutdown();
+                return;
+            }
         }
+
+        // Log unhandled exceptions and fail gracefully instead of vanishing.
+        DispatcherUnhandledException += (_, args) =>
+        {
+            CrashLog.Write(args.Exception);
+            MessageBox.Show(
+                $"Macrofy hit an unexpected error and needs to close.\n\nDetails were saved to:\n{CrashLog.FilePath}",
+                "Macrofy", MessageBoxButton.OK, MessageBoxImage.Error);
+            args.Handled = true;
+            Shutdown();
+        };
+        AppDomain.CurrentDomain.UnhandledException += (_, args) => CrashLog.Write(args.ExceptionObject as Exception);
+        System.Threading.Tasks.TaskScheduler.UnobservedTaskException += (_, args) =>
+        {
+            CrashLog.Write(args.Exception);
+            args.SetObserved();
+        };
 
         base.OnStartup(e);
 

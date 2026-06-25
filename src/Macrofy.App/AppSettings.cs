@@ -21,8 +21,11 @@ public sealed class AppSettings
     // Start hidden in the tray even when launched normally (not just via --minimized).
     public bool StartMinimized { get; set; }
 
-    // Toggle capture on the selected keyboard with a system-wide hotkey (Ctrl+Alt+F10).
+    // Toggle capture on the selected keyboard with a customizable system-wide hotkey.
     public bool GlobalHotkeyEnabled { get; set; }
+    public int GlobalHotkeyModifiers { get; set; } = 0x2 | 0x1; // MOD_CONTROL | MOD_ALT
+    public int GlobalHotkeyVk { get; set; } = 0x79;             // VK_F10
+    public string GlobalHotkeyDisplay { get; set; } = "Ctrl + Alt + F10";
 
     // Show the "still running in the tray" balloon when minimizing to tray.
     public bool ShowTrayNotifications { get; set; } = true;

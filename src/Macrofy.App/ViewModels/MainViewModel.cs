@@ -271,7 +271,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     public string BindTargetPlaceholder => _bindKind switch
     {
-        MacroActionKind.LaunchApp => "Click Browse… or paste the path to a program",
+        MacroActionKind.LaunchApp => "Browse… or paste a path",
         MacroActionKind.OpenUrl => "https://example.com",
         MacroActionKind.TypeText => "What should this key type for you?",
         MacroActionKind.SendHotkey => "Click here, then press the keys (e.g. Ctrl+C)",
@@ -480,12 +480,33 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         }
     }
 
+    public int GlobalHotkeyModifiers => _settings.GlobalHotkeyModifiers;
+    public int GlobalHotkeyVk => _settings.GlobalHotkeyVk;
+    public string GlobalHotkeyDisplay => _settings.GlobalHotkeyDisplay;
+
+    public void SetGlobalHotkey(int modifiers, int vk, string display)
+    {
+        _settings.GlobalHotkeyModifiers = modifiers;
+        _settings.GlobalHotkeyVk = vk;
+        _settings.GlobalHotkeyDisplay = display;
+        _settings.Save();
+        OnPropertyChanged(nameof(GlobalHotkeyDisplay));
+        GlobalHotkeyToggled?.Invoke(this, EventArgs.Empty); // re-register with the new combo
+    }
+
     // Invoked by the global hotkey — flip capture on the selected keyboard.
     public void ToggleCaptureHotkey()
     {
         if (_selectedKeyboard is not null)
             IsCapturing = !_isCapturing;
     }
+
+    // ---- elevation ----
+
+    public bool CanElevate => !ElevationHelper.IsElevated;
+    public string ElevationStatus => ElevationHelper.IsElevated
+        ? "Macrofy is running as administrator — it can capture elevated apps and games."
+        : "Run Macrofy as administrator to capture elevated apps and some anti-cheat games.";
 
     // ---- auto-capture selection (Settings tab) ----
 

@@ -352,9 +352,9 @@
                             <Border Grid.Column="2" Background="{StaticResource RmCardBrush}"
                                     BorderBrush="{StaticResource RmCardBorderBrush}" BorderThickness="1"
                                     CornerRadius="12">
-                                <ScrollViewer Margin="16,14,16,14" VerticalScrollBarVisibility="Auto"
+                                <ScrollViewer Margin="16,14,8,14" VerticalScrollBarVisibility="Auto"
                                               local:SmoothScroll.Enabled="True">
-                                  <StackPanel>
+                                  <StackPanel Margin="0,0,10,0">
                                     <Grid Margin="0,0,0,10">
                                         <TextBlock Text="MACROS" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"
                                                    Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
@@ -594,7 +594,7 @@
                     <Grid Margin="28,22,28,22" MaxWidth="660" HorizontalAlignment="Left"
                           Visibility="{Binding IsChecked, ElementName=NavSettings, Converter={StaticResource BoolToVis}}">
                         <ScrollViewer VerticalScrollBarVisibility="Auto" local:SmoothScroll.Enabled="True">
-                            <StackPanel>
+                            <StackPanel Margin="0,0,10,0">
                                 <TextBlock Text="Settings" FontSize="26" FontWeight="Bold" Margin="0,0,0,4" />
                                 <TextBlock Margin="0,0,0,18" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                            Text="Control how Macrofy starts up and what happens when you close it." />
@@ -674,20 +674,31 @@
                                 </ui:Card>
 
                                 <ui:Card Margin="0,12,0,0">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
-                                        </Grid.ColumnDefinitions>
-                                        <StackPanel Grid.Column="0" Margin="0,0,16,0">
-                                            <TextBlock Text="Global capture hotkey" FontWeight="SemiBold" />
-                                            <TextBlock TextWrapping="Wrap" FontSize="12" Margin="0,3,0,0"
-                                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                                       Text="Press Ctrl + Alt + F10 anywhere to turn capture on or off for the selected keyboard — handy right before launching a game." />
+                                    <StackPanel>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                                                <TextBlock Text="Global capture hotkey" FontWeight="SemiBold" />
+                                                <TextBlock TextWrapping="Wrap" FontSize="12" Margin="0,3,0,0"
+                                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                           Text="Toggle capture for the selected keyboard from anywhere — handy right before launching a game." />
+                                            </StackPanel>
+                                            <ui:ToggleSwitch Grid.Column="1" VerticalAlignment="Center"
+                                                             IsChecked="{Binding GlobalHotkeyEnabled, Mode=TwoWay}" />
+                                        </Grid>
+                                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                            <TextBlock Text="Shortcut" VerticalAlignment="Center" Margin="0,0,10,0"
+                                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                                            <ui:TextBox Width="200" IsReadOnly="True" Cursor="Hand"
+                                                        Text="{Binding GlobalHotkeyDisplay, Mode=OneWay}"
+                                                        PreviewKeyDown="GlobalHotkeyBox_PreviewKeyDown"
+                                                        IsEnabled="{Binding GlobalHotkeyEnabled}"
+                                                        ToolTip="Click, then press your shortcut (must include Ctrl, Alt, Shift or Win)" />
                                         </StackPanel>
-                                        <ui:ToggleSwitch Grid.Column="1" VerticalAlignment="Center"
-                                                         IsChecked="{Binding GlobalHotkeyEnabled, Mode=TwoWay}" />
-                                    </Grid>
+                                    </StackPanel>
                                 </ui:Card>
 
                                 <ui:Card Margin="0,12,0,0">
@@ -704,6 +715,24 @@
                                         </StackPanel>
                                         <ui:ToggleSwitch Grid.Column="1" VerticalAlignment="Center"
                                                          IsChecked="{Binding ShowTrayNotifications, Mode=TwoWay}" />
+                                    </Grid>
+                                </ui:Card>
+
+                                <ui:Card Margin="0,12,0,0">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                                            <TextBlock Text="Administrator" FontWeight="SemiBold" />
+                                            <TextBlock TextWrapping="Wrap" FontSize="12" Margin="0,3,0,0"
+                                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                       Text="{Binding ElevationStatus}" />
+                                        </StackPanel>
+                                        <ui:Button Grid.Column="1" VerticalAlignment="Center" Content="Restart as administrator"
+                                                   Click="RestartAsAdminButton_Click"
+                                                   Visibility="{Binding CanElevate, Converter={StaticResource BoolToVis}}" />
                                     </Grid>
                                 </ui:Card>
 
@@ -728,7 +757,7 @@
                     <Grid Margin="28,22,28,22" MaxWidth="680" HorizontalAlignment="Left"
                           Visibility="{Binding IsChecked, ElementName=NavAbout, Converter={StaticResource BoolToVis}}">
                         <ScrollViewer VerticalScrollBarVisibility="Auto" local:SmoothScroll.Enabled="True">
-                            <StackPanel>
+                            <StackPanel Margin="0,0,10,0">
                                 <!-- Hero -->
                                 <Grid Margin="0,4,0,20">
                                     <Grid.ColumnDefinitions>

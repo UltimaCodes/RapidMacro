@@ -53,7 +53,7 @@ public partial class MainWindow : FluentWindow
     [DllImport("user32.dll")] private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
 
     private const int HotkeyId = 0xB001;
-    private const uint ModAlt = 0x1, ModControl = 0x2, ModNoRepeat = 0x4000, VkF10 = 0x79;
+    private const uint ModAlt = 0x1, ModControl = 0x2, ModShift = 0x4, ModWin = 0x8, ModNoRepeat = 0x4000;
     private const int WmHotkey = 0x0312;
 
     protected override void OnSourceInitialized(EventArgs e)
@@ -79,8 +79,63 @@ public partial class MainWindow : FluentWindow
         if (handle == IntPtr.Zero)
             return;
         UnregisterHotKey(handle, HotkeyId);
-        if (_viewModel.GlobalHotkeyEnabled)
-            RegisterHotKey(handle, HotkeyId, ModControl | ModAlt | ModNoRepeat, VkF10);
+        if (_viewModel.GlobalHotkeyEnabled && _viewModel.GlobalHotkeyVk != 0)
+            RegisterHotKey(handle, HotkeyId,
+                (uint)_viewModel.GlobalHotkeyModifiers | ModNoRepeat, (uint)_viewModel.GlobalHotkeyVk);
+    }
+
+    // Record a new global hotkey (must include a modifier so it doesn't hijack a bare key).
+    private void GlobalHotkeyBox_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        e.Handled = true;
+        var key = e.Key == Key.System ? e.SystemKey : e.Key;
+        if (IsModifierKey(key))
+            return;
+        var mods = Keyboard.Modifiers;
+        if (mods == ModifierKeys.None)
+            return;
+
+        uint winMods = 0;
+        if (mods.HasFlag(ModifierKeys.Control)) winMods |= ModControl;
+        if (mods.HasFlag(ModifierKeys.Alt)) winMods |= ModAlt;
+        if (mods.HasFlag(ModifierKeys.Shift)) winMods |= ModShift;
+        if (mods.HasFlag(ModifierKeys.Windows)) winMods |= ModWin;
+
+        _viewModel.SetGlobalHotkey((int)winMods, KeyInterop.VirtualKeyFromKey(key), FormatHotkey(mods, key));
+    }
+
+    private static string FormatHotkey(ModifierKeys mods, Key key)
+    {
+        var parts = new List<string>();
+        if (mods.HasFlag(ModifierKeys.Control)) parts.Add("Ctrl");
+        if (mods.HasFlag(ModifierKeys.Alt)) parts.Add("Alt");
+        if (mods.HasFlag(ModifierKeys.Shift)) parts.Add("Shift");
+        if (mods.HasFlag(ModifierKeys.Windows)) parts.Add("Win");
+        parts.Add(key switch
+        {
+            >= Key.D0 and <= Key.D9 => ((char)('0' + (key - Key.D0))).ToString(),
+            >= Key.NumPad0 and <= Key.NumPad9 => "Num" + (key - Key.NumPad0),
+            _ => key.ToString(),
+        });
+        return string.Join(" + ", parts);
+    }
+
+    private void RestartAsAdminButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo(Environment.ProcessPath!)
+            {
+                UseShellExecute = true,
+                Verb = "runas",
+                Arguments = "--relaunch",
+            });
+        }
+        catch (System.ComponentModel.Win32Exception)
+        {
+            return; // user declined the UAC prompt
+        }
+        ExitApp();
     }
 
     private void OnKeyboardFocusChanged(object sender, KeyboardFocusChangedEventArgs e)
