@@ -15,11 +15,43 @@ public sealed class EmptyToVisibilityConverter : IValueConverter
         => throw new NotSupportedException();
 }
 
+// Visible when the bound count is non-zero (opposite of EmptyToVisibilityConverter).
+public sealed class NonEmptyToVisibilityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        => value is int count && count > 0 ? Visibility.Visible : Visibility.Collapsed;
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
 // Visible when the bound bool is false (inverse of the built-in).
 public sealed class InverseBoolToVisibilityConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         => value is true ? Visibility.Collapsed : Visibility.Visible;
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+// Friendly names for the keyboard-layout dropdown.
+public sealed class LayoutKindToLabelConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        => value is KeyboardLayoutKind kind
+            ? kind switch
+            {
+                KeyboardLayoutKind.Full => "Full size (104)",
+                KeyboardLayoutKind.TenKeyless => "Tenkeyless (TKL)",
+                KeyboardLayoutKind.SeventyFive => "75%",
+                KeyboardLayoutKind.SixtyFive => "65%",
+                KeyboardLayoutKind.Sixty => "60%",
+                KeyboardLayoutKind.Numpad => "Numpad",
+                KeyboardLayoutKind.Custom => "Custom (learned)",
+                _ => kind.ToString(),
+            }
+            : string.Empty;
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         => throw new NotSupportedException();

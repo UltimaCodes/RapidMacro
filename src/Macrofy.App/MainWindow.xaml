@@ -16,8 +16,10 @@
     <ui:FluentWindow.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
         <local:EmptyToVisibilityConverter x:Key="EmptyToVis" />
+        <local:NonEmptyToVisibilityConverter x:Key="InverseEmptyToVis" />
         <local:InverseBoolToVisibilityConverter x:Key="InverseBoolToVis" />
         <local:ActionKindToLabelConverter x:Key="ActionKindLabel" />
+        <local:LayoutKindToLabelConverter x:Key="LayoutKindLabel" />
 
         <!-- One key on the visual keyboard -->
         <DataTemplate x:Key="KeyCapTemplate">
@@ -225,6 +227,21 @@
                                                 <ui:Button Content="Save name" Margin="8,0,0,0"
                                                            Click="RenameButton_Click" />
                                             </StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                                <TextBlock Text="Layout" VerticalAlignment="Center" Margin="0,0,8,0"
+                                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                                                <ComboBox Width="170" ItemsSource="{Binding LayoutKinds}"
+                                                          SelectedItem="{Binding SelectedLayoutKind, Mode=TwoWay}">
+                                                    <ComboBox.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <TextBlock Text="{Binding Converter={StaticResource LayoutKindLabel}}" />
+                                                        </DataTemplate>
+                                                    </ComboBox.ItemTemplate>
+                                                </ComboBox>
+                                                <ui:Button Content="Learn keys…" Margin="8,0,0,0"
+                                                           ToolTip="Press every key on the device to build a custom layout"
+                                                           Click="LearnKeysButton_Click" />
+                                            </StackPanel>
                                         </StackPanel>
                                         <ui:ToggleSwitch Grid.Column="1" VerticalAlignment="Center"
                                                          Focusable="False" RenderTransformOrigin="0.5,0.5"
@@ -258,17 +275,77 @@
                             <Border Grid.Column="0" Background="{StaticResource RmCardBrush}"
                                     BorderBrush="{StaticResource RmCardBorderBrush}" BorderThickness="1"
                                     CornerRadius="12" Padding="20,16">
-                                <DockPanel>
-                                    <TextBlock DockPanel.Dock="Top"
-                                               Text="TEST — keys light up as you press them on the captured device"
-                                               FontSize="11" FontWeight="SemiBold" Margin="2,0,0,12"
-                                               Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
-                                    <Viewbox Stretch="Uniform" StretchDirection="Both"
-                                             HorizontalAlignment="Center" VerticalAlignment="Center">
-                                        <ItemsControl ItemsSource="{Binding KeyboardLayout.Rows}"
-                                                      ItemTemplate="{StaticResource KeyRowTemplate}" />
-                                    </Viewbox>
-                                </DockPanel>
+                                <Grid>
+                                    <DockPanel>
+                                        <TextBlock DockPanel.Dock="Top"
+                                                   Text="TEST — keys light up as you press them on the captured device"
+                                                   FontSize="11" FontWeight="SemiBold" Margin="2,0,0,12"
+                                                   Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                                        <Grid>
+                                            <Viewbox Stretch="Uniform" StretchDirection="Both"
+                                                     HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <ItemsControl ItemsSource="{Binding KeyboardLayout.Rows}"
+                                                              ItemTemplate="{StaticResource KeyRowTemplate}" />
+                                            </Viewbox>
+                                            <!-- Custom layout chosen but nothing learned yet -->
+                                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                        Visibility="{Binding ShowLearnPrompt, Converter={StaticResource BoolToVis}}">
+                                                <ui:SymbolIcon Symbol="Keyboard24" FontSize="30" HorizontalAlignment="Center"
+                                                               Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                                                <TextBlock Margin="0,10,0,0" HorizontalAlignment="Center" FontWeight="SemiBold"
+                                                           Text="No keys learned yet" />
+                                                <TextBlock Margin="0,4,0,0" HorizontalAlignment="Center" TextAlignment="Center"
+                                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                           Text="Calibrate this keyboard so the tester matches it." />
+                                                <ui:Button Margin="0,12,0,0" HorizontalAlignment="Center" Content="Learn keys…"
+                                                           Click="LearnKeysButton_Click" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </DockPanel>
+
+                                    <!-- Calibration overlay -->
+                                    <Border Background="{StaticResource RmCardBrush}" CornerRadius="12"
+                                            Visibility="{Binding IsLearning, Converter={StaticResource BoolToVis}}">
+                                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                    MaxWidth="440" Margin="24">
+                                            <ui:SymbolIcon Symbol="Keyboard24" FontSize="34" HorizontalAlignment="Center"
+                                                           Foreground="{StaticResource RmAccentBrush}" />
+                                            <TextBlock Text="Learning your keyboard" FontSize="18" FontWeight="SemiBold"
+                                                       HorizontalAlignment="Center" Margin="0,10,0,0" />
+                                            <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,6,0,0"
+                                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                       Text="Press every key on this keyboard once — we'll record exactly which keys it has. Keys won't type or fire macros while learning." />
+                                            <TextBlock HorizontalAlignment="Center" Margin="0,14,0,0" FontWeight="SemiBold"
+                                                       Foreground="{StaticResource RmAccentBrush}"
+                                                       Text="{Binding LearnedKeys.Count, StringFormat='{}{0} keys recorded'}" />
+                                            <Border Margin="0,10,0,0" MaxHeight="120" CornerRadius="6"
+                                                    Background="#14FFFFFF" Padding="8"
+                                                    Visibility="{Binding LearnedKeys.Count, Converter={StaticResource InverseEmptyToVis}}">
+                                                <ScrollViewer VerticalScrollBarVisibility="Auto" local:SmoothScroll.Enabled="True">
+                                                    <ItemsControl ItemsSource="{Binding LearnedKeys}">
+                                                        <ItemsControl.ItemsPanel>
+                                                            <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                                                        </ItemsControl.ItemsPanel>
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Border Margin="0,0,5,5" CornerRadius="5" Padding="7,3"
+                                                                        Background="{StaticResource RmAccentMutedBrush}">
+                                                                    <TextBlock Text="{Binding}" FontSize="11"
+                                                                               Foreground="{StaticResource RmAccentBrush}" />
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </ScrollViewer>
+                                            </Border>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,16,0,0">
+                                                <ui:Button Content="Cancel" Click="CancelLearnButton_Click" MinWidth="96" />
+                                                <ui:Button Content="Save layout" Appearance="Primary"
+                                                           Click="SaveLearnedButton_Click" MinWidth="120" Margin="8,0,0,0" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
                             </Border>
 
                             <!-- MACROS: bind captured keys to actions -->
@@ -503,87 +580,108 @@
                         <ScrollViewer VerticalScrollBarVisibility="Auto" local:SmoothScroll.Enabled="True">
                             <StackPanel>
                                 <!-- Hero -->
-                                <StackPanel Orientation="Horizontal" Margin="0,4,0,20">
-                                    <Border Width="60" Height="60" CornerRadius="15" Background="{StaticResource RmAccentBrush}">
+                                <Grid Margin="0,4,0,20">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border Grid.Column="0" Width="60" Height="60" CornerRadius="15"
+                                            Background="{StaticResource RmAccentBrush}">
                                         <ui:SymbolIcon Symbol="Keyboard24" FontSize="30" Foreground="#06201C"
                                                        HorizontalAlignment="Center" VerticalAlignment="Center" />
                                     </Border>
-                                    <StackPanel Margin="18,0,0,0" VerticalAlignment="Center">
+                                    <StackPanel Grid.Column="1" Margin="18,0,0,0" VerticalAlignment="Center">
                                         <TextBlock Text="Macrofy" FontSize="30" FontWeight="Bold" />
-                                        <TextBlock Text="Version 0.1  ·  Driver-free macro pad for Windows"
+                                        <TextBlock Text="Version 0.1  ·  Driver-free macro pad for Windows" TextWrapping="Wrap"
                                                    Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
                                     </StackPanel>
-                                </StackPanel>
+                                </Grid>
 
                                 <TextBlock TextWrapping="Wrap" FontSize="15" Margin="0,0,0,22" LineHeight="22"
                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                            Text="Turn a spare keyboard into a programmable macro pad — without touching the keyboards you actually type on. Pick a keyboard, flip it to capture, and every key becomes whatever you need it to be." />
 
                                 <ui:Card Margin="0,0,0,10">
-                                    <StackPanel Orientation="Horizontal">
-                                        <Border Width="42" Height="42" CornerRadius="11" VerticalAlignment="Top"
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Grid.Column="0" Width="42" Height="42" CornerRadius="11" VerticalAlignment="Top"
                                                 Background="{StaticResource RmAccentMutedBrush}">
                                             <ui:SymbolIcon Symbol="Keyboard24" FontSize="22" Foreground="{StaticResource RmAccentBrush}"
                                                            HorizontalAlignment="Center" VerticalAlignment="Center" />
                                         </Border>
-                                        <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                                        <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
                                             <TextBlock Text="One keyboard, fully yours" FontWeight="SemiBold" />
                                             <TextBlock TextWrapping="Wrap" FontSize="12" Margin="0,2,0,0"
                                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                                        Text="Isolate a single keyboard so its keys stop typing and start firing macros — while every other keyboard keeps working normally." />
                                         </StackPanel>
-                                    </StackPanel>
+                                    </Grid>
                                 </ui:Card>
 
                                 <ui:Card Margin="0,0,0,10">
-                                    <StackPanel Orientation="Horizontal">
-                                        <Border Width="42" Height="42" CornerRadius="11" VerticalAlignment="Top"
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Grid.Column="0" Width="42" Height="42" CornerRadius="11" VerticalAlignment="Top"
                                                 Background="{StaticResource RmAccentMutedBrush}">
                                             <ui:SymbolIcon Symbol="Flash24" FontSize="22" Foreground="{StaticResource RmAccentBrush}"
                                                            HorizontalAlignment="Center" VerticalAlignment="Center" />
                                         </Border>
-                                        <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                                        <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
                                             <TextBlock Text="An action for everything" FontWeight="SemiBold" />
                                             <TextBlock TextWrapping="Wrap" FontSize="12" Margin="0,2,0,0"
                                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                                        Text="Launch apps, open links, type text, fire hotkeys, control media and volume, or run commands — one shot or a whole sequence." />
                                         </StackPanel>
-                                    </StackPanel>
+                                    </Grid>
                                 </ui:Card>
 
                                 <ui:Card Margin="0,0,0,10">
-                                    <StackPanel Orientation="Horizontal">
-                                        <Border Width="42" Height="42" CornerRadius="11" VerticalAlignment="Top"
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Grid.Column="0" Width="42" Height="42" CornerRadius="11" VerticalAlignment="Top"
                                                 Background="{StaticResource RmAccentMutedBrush}">
                                             <ui:SymbolIcon Symbol="Layer24" FontSize="22" Foreground="{StaticResource RmAccentBrush}"
                                                            HorizontalAlignment="Center" VerticalAlignment="Center" />
                                         </Border>
-                                        <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                                        <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
                                             <TextBlock Text="Layers" FontWeight="SemiBold" />
                                             <TextBlock TextWrapping="Wrap" FontSize="12" Margin="0,2,0,0"
                                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                                        Text="Hold or tap one key to flip the whole keyboard to another set of macros — like a Fn layer, but for anything you want." />
                                         </StackPanel>
-                                    </StackPanel>
+                                    </Grid>
                                 </ui:Card>
 
                                 <ui:Card Margin="0,0,0,4">
-                                    <StackPanel Orientation="Horizontal">
-                                        <Border Width="42" Height="42" CornerRadius="11" VerticalAlignment="Top"
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Grid.Column="0" Width="42" Height="42" CornerRadius="11" VerticalAlignment="Top"
                                                 Background="{StaticResource RmAccentMutedBrush}">
                                             <ui:SymbolIcon Symbol="ShieldKeyhole24" FontSize="22" Foreground="{StaticResource RmAccentBrush}"
                                                            HorizontalAlignment="Center" VerticalAlignment="Center" />
                                         </Border>
-                                        <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                                        <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
                                             <TextBlock Text="Driver-free &amp; game-safe" FontWeight="SemiBold" />
                                             <TextBlock TextWrapping="Wrap" FontSize="12" Margin="0,2,0,0"
                                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                                        Text="No kernel driver and nothing installed system-wide, so it stays invisible to anti-cheat. Built on Windows Raw Input and a lightweight hook." />
                                         </StackPanel>
-                                    </StackPanel>
+                                    </Grid>
                                 </ui:Card>
 
-                                <TextBlock Margin="2,16,0,0" FontSize="12"
+                                <TextBlock Margin="2,16,0,0" FontSize="12" TextWrapping="Wrap"
                                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                                            Text="Made for Windows · github.com/UltimaCodes/RapidMacro" />
                             </StackPanel>

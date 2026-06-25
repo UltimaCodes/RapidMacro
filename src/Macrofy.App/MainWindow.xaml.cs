@@ -261,15 +261,25 @@ public partial class MainWindow : FluentWindow
             _viewModel.RenameLayer(layer, dialog.Value);
     }
 
-    // While capturing, the device is locked in. Block clicks on the list and shake the Capture
-    // toggle so it's clear you turn capture off first.
+    // While capturing (or calibrating) the device is locked in. Block clicks on the list; if
+    // it's because of capture, shake the Capture toggle so it's clear you turn it off first.
     private void DeviceList_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        if (!_viewModel.IsCapturing)
+        if (!_viewModel.IsCapturing && !_viewModel.IsLearning)
             return;
         e.Handled = true;
-        ShakeCaptureToggle();
+        if (_viewModel.IsCapturing)
+            ShakeCaptureToggle();
     }
+
+    private void LearnKeysButton_Click(object sender, RoutedEventArgs e)
+        => _viewModel.StartLearning();
+
+    private void SaveLearnedButton_Click(object sender, RoutedEventArgs e)
+        => _viewModel.SaveLearned();
+
+    private void CancelLearnButton_Click(object sender, RoutedEventArgs e)
+        => _viewModel.CancelLearning();
 
     private void ShakeCaptureToggle()
     {

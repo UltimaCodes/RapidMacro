@@ -18,6 +18,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private readonly DeviceNameStore _nameStore = new();
     private readonly MacroEngine _macroEngine = new();
     private readonly MacroProfileStore _profileStore = new();
+    private readonly DeviceLayoutStore _layoutStore = new();
     private readonly AppSettings _settings = AppSettings.Load();
     private readonly ConcurrentQueue<DeviceKeyEvent> _pending = new();
     private readonly DispatcherTimer _drainTimer;
@@ -29,7 +30,14 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public ObservableCollection<MacroBinding> Bindings { get; } = new();
     public ObservableCollection<MacroLayer> Layers { get; } = new();
     public ObservableCollection<string> LayerTargets { get; } = new();
-    public KeyboardLayoutViewModel KeyboardLayout { get; } = new();
+    public ObservableCollection<string> LearnedKeys { get; } = new();
+
+    private KeyboardLayoutViewModel _keyboardLayout = new();
+    public KeyboardLayoutViewModel KeyboardLayout
+    {
+        get => _keyboardLayout;
+        private set => SetProperty(ref _keyboardLayout, value);
+    }
 
     public MacroActionKind[] ActionKinds { get; } =
     {
@@ -129,11 +137,13 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     public string StatusText => _selectedKeyboard is null
         ? "No keyboard selected."
-        : _isCapturing && _captureSuspended
-            ? "Capture paused while you type — it resumes automatically when you click out of the text box."
-            : _isCapturing
-                ? $"Capturing \"{_selectedKeyboard.DisplayName}\" — its keys are isolated and run your macros instead of typing."
-                : $"\"{_selectedKeyboard.DisplayName}\" is passing through normally. Toggle capture to take it over.";
+        : _isLearning
+            ? "Learning keys — press every key on this keyboard once, then Save."
+            : _isCapturing && _captureSuspended
+                ? "Capture paused while you type — it resumes automatically when you click out of the text box."
+                : _isCapturing
+                    ? $"Capturing \"{_selectedKeyboard.DisplayName}\" — its keys are isolated and run your macros instead of typing."
+                    : $"\"{_selectedKeyboard.DisplayName}\" is passing through normally. Toggle capture to take it over.";
 
     // While a text field is focused we pause the actual blocking (so the captured keyboard can
     // type into it) without flipping IsCapturing — the toggle stays "on" and we resume on blur.
@@ -413,6 +423,101 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         }
     }
 
+    // ---- keyboard layout + learn/calibrate ----
+
+    private KeyboardLayoutKind _layoutKind = KeyboardLayoutKind.Full;
+    private List<int> _customKeys = new();
+
+    public KeyboardLayoutKind[] LayoutKinds { get; } =
+    {
+        KeyboardLayoutKind.Full, KeyboardLayoutKind.TenKeyless, KeyboardLayoutKind.SeventyFive,
+        KeyboardLayoutKind.SixtyFive, KeyboardLayoutKind.Sixty, KeyboardLayoutKind.Numpad,
+        KeyboardLayoutKind.Custom,
+    };
+
+    public KeyboardLayoutKind SelectedLayoutKind
+    {
+        get => _layoutKind;
+        set
+        {
+            if (!SetProperty(ref _layoutKind, value))
+                return;
+            if (_selectedKeyboard is not null)
+                _layoutStore.Set(_selectedKeyboard.Id, new DeviceLayout { Kind = value, Keys = _customKeys });
+            RebuildKeyboardLayout();
+            OnPropertyChanged(nameof(ShowLearnPrompt));
+        }
+    }
+
+    // The Custom layout is empty until the user calibrates — nudge them to learn keys.
+    public bool ShowLearnPrompt => _layoutKind == KeyboardLayoutKind.Custom && _customKeys.Count == 0 && !_isLearning;
+
+    private void RebuildKeyboardLayout() => KeyboardLayout = new KeyboardLayoutViewModel(_layoutKind, _customKeys);
+
+    private void LoadLayoutForSelected()
+    {
+        var layout = _selectedKeyboard is null ? new DeviceLayout() : _layoutStore.Get(_selectedKeyboard.Id);
+        _layoutKind = layout.Kind;
+        _customKeys = layout.Keys ?? new List<int>();
+        OnPropertyChanged(nameof(SelectedLayoutKind));
+        OnPropertyChanged(nameof(ShowLearnPrompt));
+        RebuildKeyboardLayout();
+    }
+
+    private bool _isLearning;
+    public bool IsLearning
+    {
+        get => _isLearning;
+        private set
+        {
+            if (SetProperty(ref _isLearning, value))
+            {
+                OnPropertyChanged(nameof(StatusText));
+                OnPropertyChanged(nameof(ShowLearnPrompt));
+            }
+        }
+    }
+
+    private readonly HashSet<int> _learnedVks = new();
+
+    public void StartLearning()
+    {
+        if (_selectedKeyboard is null || _isLearning)
+            return;
+        _learnedVks.Clear();
+        LearnedKeys.Clear();
+        IsLearning = true;
+        KeyboardLayout.Reset();
+        // Capture this device so we receive its keys, but don't run macros while calibrating.
+        _backend.SetCapturedDevices(_selectedKeyboard.DevicePaths);
+        _macroEngine.Clear();
+    }
+
+    public void SaveLearned()
+    {
+        if (!_isLearning)
+            return;
+        IsLearning = false;
+        if (_learnedVks.Count > 0 && _selectedKeyboard is not null)
+        {
+            _customKeys = _learnedVks.OrderBy(v => v).ToList();
+            _layoutKind = KeyboardLayoutKind.Custom;
+            _layoutStore.Set(_selectedKeyboard.Id, new DeviceLayout { Kind = _layoutKind, Keys = _customKeys });
+            OnPropertyChanged(nameof(SelectedLayoutKind));
+            OnPropertyChanged(nameof(ShowLearnPrompt));
+            RebuildKeyboardLayout();
+        }
+        ApplyCapture(); // restore capture to whatever the toggle says
+    }
+
+    public void CancelLearning()
+    {
+        if (!_isLearning)
+            return;
+        IsLearning = false;
+        ApplyCapture();
+    }
+
     public void RefreshDevices()
     {
         string? previous = _selectedKeyboard?.Id;
@@ -440,6 +545,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         Layers.Clear();
         Bindings.Clear();
         LayerTargets.Clear();
+        LoadLayoutForSelected();
         if (_selectedKeyboard is null)
         {
             _profile = null;
@@ -525,6 +631,14 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         while (_pending.TryDequeue(out var e))
         {
             any = true;
+            if (_isLearning)
+            {
+                // Calibration: record the unique keys this device emits (skip the unblockable
+                // Windows keys, which never arrive here anyway).
+                if (e.IsKeyDown && e.VirtualKey is not (0x5B or 0x5C or 0xFF) && _learnedVks.Add(e.VirtualKey))
+                    LearnedKeys.Add(VirtualKeyNames.Name(e.VirtualKey));
+                continue;
+            }
             KeyboardLayout.SetPressed(e.VirtualKey, e.IsKeyDown);
             KeyLog.Insert(0, KeyLogEntry.From(e));
             if (e.IsKeyDown)
