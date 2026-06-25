@@ -24,7 +24,7 @@ public sealed class MacroAction
     public string Arguments { get; set; } = string.Empty;
 
     // Layer switches have no "target string" to fill in beyond the layer name, which is
-    // chosen separately — so they're never "empty" the way a blank app path would be.
+    // chosen separately - so they're never "empty" the way a blank app path would be.
     public bool IsEmpty => Kind == MacroActionKind.None
         || (Kind is not (MacroActionKind.LayerHold or MacroActionKind.LayerToggle)
             && string.IsNullOrWhiteSpace(Target));
@@ -37,8 +37,8 @@ public sealed class MacroAction
         MacroActionKind.SendHotkey => $"Hotkey  {Target}",
         MacroActionKind.RunCommand => $"Run  {Target}",
         MacroActionKind.MediaKey => $"Media  {MediaLabel(Target)}",
-        MacroActionKind.LayerHold => $"Hold → layer \"{Target}\"",
-        MacroActionKind.LayerToggle => $"Toggle → layer \"{Target}\"",
+        MacroActionKind.LayerHold => $"Hold for layer \"{Target}\"",
+        MacroActionKind.LayerToggle => $"Toggle layer \"{Target}\"",
         _ => "(unassigned)",
     };
 
@@ -62,7 +62,7 @@ public sealed class MacroStep
     public int DelayMsAfter { get; set; }   // milliseconds to wait after this step (0 = none)
 }
 
-// One captured key bound to an action — or, when Steps is non-empty, to a sequence of them.
+// One captured key bound to an action - or, when Steps is non-empty, to a sequence of them.
 public sealed class MacroBinding
 {
     public int VirtualKey { get; set; }

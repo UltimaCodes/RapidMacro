@@ -285,7 +285,7 @@ public partial class MainWindow : FluentWindow
 
         string? name = KeyToHotkeyName(key);
         if (name is null)
-            return; // unsupported key — don't record a combo that won't fire
+            return; // unsupported key - don't record a combo that won't fire
 
         var parts = new List<string>();
         var mods = Keyboard.Modifiers;

@@ -40,6 +40,6 @@ public static class AutoStartManager
             else
                 key.DeleteValue(ValueName, throwOnMissingValue: false);
         }
-        catch { /* best effort — autostart just won't change */ }
+        catch { /* best effort - autostart just won't change */ }
     }
 }

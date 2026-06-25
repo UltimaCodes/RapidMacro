@@ -58,7 +58,7 @@ public sealed class MacroEngine
         return map;
     }
 
-    // Called from the capture backend (decider thread) — must return fast.
+    // Called from the capture backend (decider thread) - must return fast.
     public void OnCapturedKey(DeviceKeyEvent e)
     {
         MacroBinding? toRun = null;

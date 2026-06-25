@@ -29,7 +29,7 @@ public partial class App : Application
             }
             if (!createdNew)
             {
-                // Already running — poke the live instance to come to the front, then bow out.
+                // Already running - poke the live instance to come to the front, then bow out.
                 try { EventWaitHandle.OpenExisting(ShowEventName).Set(); } catch { /* it'll be there next time */ }
                 Shutdown();
                 return;

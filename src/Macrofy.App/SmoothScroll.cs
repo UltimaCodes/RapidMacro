@@ -6,7 +6,7 @@ using System.Windows.Media.Animation;
 
 namespace Macrofy.App;
 
-// Animated, eased mouse-wheel scrolling for a ScrollViewer — the default scrolls in abrupt
+// Animated, eased mouse-wheel scrolling for a ScrollViewer - the default scrolls in abrupt
 // line-sized jumps. Attach with local:SmoothScroll.Enabled="True". ScrollViewer.VerticalOffset
 // is read-only, so we animate a proxy attached property that forwards to ScrollToVerticalOffset.
 public static class SmoothScroll
@@ -34,7 +34,7 @@ public static class SmoothScroll
             return;
         if ((bool)e.NewValue)
         {
-            sv.CanContentScroll = false;   // scroll by pixels, not by line — required for smoothness
+            sv.CanContentScroll = false;   // scroll by pixels, not by line - required for smoothness
             sv.PreviewMouseWheel += OnWheel;
         }
         else
@@ -54,7 +54,7 @@ public static class SmoothScroll
         var sv = (ScrollViewer)sender;
 
         // If a dropdown is open, a wheel here would scroll the panel while the popup floats in
-        // place (it doesn't move with content) — looks broken. Close it instead of scrolling.
+        // place (it doesn't move with content) - looks broken. Close it instead of scrolling.
         var openCombo = FindOpenComboBox(sv);
         if (openCombo is not null)
         {
@@ -64,7 +64,7 @@ public static class SmoothScroll
         }
 
         if (sv.ScrollableHeight <= 0)
-            return; // nothing to scroll — let the event bubble to a parent
+            return; // nothing to scroll - let the event bubble to a parent
         e.Handled = true;
 
         double inFlight = (double)sv.GetValue(TargetProperty);

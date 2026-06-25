@@ -26,14 +26,14 @@
             </StackPanel>
 
             <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                       Text="The left and right Windows keys (the ⊞ Win keys, next to Ctrl and Alt) can't be turned into macros. Windows acts on them before Macrofy ever sees them, so they're shown dimmed on the keyboard and can't be bound. Every other key — including Ctrl, Alt, Shift and the menu key — works normally." />
+                       Text="The left and right Windows keys (the ⊞ keys next to Ctrl and Alt) can't be turned into macros. Windows acts on them before Macrofy ever sees them, so they show up dimmed on the keyboard and can't be bound. Every other key works fine, including Ctrl, Alt, Shift and the menu key." />
 
             <ui:CardExpander Margin="0,16,0,0">
                 <ui:CardExpander.Header>
                     <TextBlock Text="Why can't they be captured?" FontWeight="SemiBold" />
                 </ui:CardExpander.Header>
                 <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                           Text="Macrofy figures out which keyboard a key came from using Raw Input, then a hook decides whether to block it. The Windows keys are handled by the operating system before that step — so without a kernel driver (which Macrofy avoids on purpose, to stay invisible to anti-cheat) there's no way to identify or block them." />
+                           Text="Macrofy figures out which keyboard a key came from using Raw Input, then a hook decides whether to block it. The Windows keys get handled by the OS before that step even happens. Without a kernel driver (which Macrofy skips on purpose, to stay invisible to anti-cheat) there's just no way to catch them." />
             </ui:CardExpander>
 
             <ui:Button Margin="0,18,0,0" HorizontalAlignment="Right" Appearance="Primary"

@@ -2,156 +2,130 @@
 
 Turn a spare keyboard into a macro pad on Windows.
 
-Plug in two keyboards. Macrofy **captures one of them** and turns it into a
-Stream Deck–style macro pad — its keys stop typing and instead fire macros
-(launch an app, open a URL, type text, send a hotkey, run a command) — while
-your **other keyboard keeps working completely normally**.
+Got a keyboard lying around? Plug it in and Macrofy takes it over. Its keys stop
+typing and start firing macros instead (launch an app, open a link, type text, send
+a hotkey, control media, run a command), while the keyboard you actually type on
+keeps working like nothing happened. No driver, nothing installed system-wide.
 
-> Status: capture **and** macros work. Pick a keyboard, toggle capture, press a
-> key to select it, bind it to an action. Driver-free.
+Think of it like a Stream Deck, except it's a whole keyboard and it's free.
 
-## Why a native Windows app (not web / Electron)
+## What it can do
 
-The core feature is low-level Windows keyboard input — identifying *which*
-physical keyboard a keystroke came from and blocking it from the OS. That's
-in-process Win32 plus a small native hook DLL. Electron would still need exactly
-that native code, wrapped in a 150 MB Chromium runtime. So this is **.NET 8 + WPF**,
-styled with [WPF-UI](https://github.com/lepoco/wpfui) for a Fluent (Windows 11) look,
-with a tiny C hook DLL for the part that has to be native.
+- **Isolate one keyboard.** Pick a keyboard, flip on capture, and only that one gets
+  taken over. Every other keyboard stays completely normal.
+- **Bind keys to actions.** Launch apps, open URLs, type text, send hotkeys, control
+  media and volume, or run commands.
+- **Multi-step macros.** Chain several actions on one key, with delays between them.
+- **Layers.** Hold or tap a key to flip the whole keyboard to another set of macros,
+  like a Fn layer but for anything you want.
+- **Per-device profiles.** Your macros are saved per keyboard, and you can import or
+  export them as a file to back up or share.
+- **Layout presets + calibration.** Tell it whether your board is full size, TKL, 75%,
+  65%, 60% or a numpad, or hit "Learn keys" and press every key once to build a custom
+  layout for oddball devices.
+- **Lives in the tray.** Minimize to tray, start with Windows, auto-capture a chosen
+  keyboard at launch, and a global hotkey to toggle capture from anywhere.
 
-## The core challenge: per-device isolation
+## How it works
 
-Blocking input from *one specific keyboard* on Windows is genuinely hard, because
-the two relevant APIs don't naturally combine:
+The hard part is blocking input from one *specific* keyboard, because the two Windows
+APIs you'd reach for don't combine the way you'd want:
 
-- **Raw Input** tells you which device sent each key — but is read-only; it can't
-  block.
-- **A low-level keyboard hook (`WH_KEYBOARD_LL`)** can block keys — but is global,
-  carries no device info, and (the killer) fires *before* Raw Input. Worse: when
-  it blocks a key, Windows never generates that key's Raw Input at all. So you
-  can't both block a key and learn which device it came from — blocking destroys
-  the only evidence. (Macrofy went down this road first; it's a dead end.)
+- **Raw Input** can tell you which physical keyboard a key came from, but it can't
+  block anything.
+- **A low-level keyboard hook (`WH_KEYBOARD_LL`)** can block keys, but it's global, has
+  no idea which device a key came from, and fires *before* Raw Input. The killer: once
+  it blocks a key, Windows never generates that key's Raw Input at all. So you can't
+  block a key and also know which keyboard it came from. Blocking destroys the only
+  evidence. (Macrofy tried this first. It's a dead end.)
 
-### How Macrofy does it (driver-free)
+The trick is to block *later*, with a global **`WH_KEYBOARD`** hook (not the LL one).
+That hook fires when an app pulls the cooked keyboard message, which is *after* Raw
+Input has already figured out the device, so the device info is still intact. It has to
+live in a DLL that gets injected into other processes, so Macrofy ships a tiny native
+hook (`native/hook.c`, built into `MacrofyHook.dll`):
 
-The fix is to block **later** in the pipeline, with a global **`WH_KEYBOARD`** hook
-(not `WH_KEYBOARD_LL`). `WH_KEYBOARD` fires when an app pulls the *cooked* keyboard
-message — *after* Raw Input has already identified the device — so blocking there
-keeps the device info intact. `WH_KEYBOARD` must live in a DLL injected into other
-processes, so Macrofy ships a tiny native hook (`native/hook.c` → `MacrofyHook.dll`):
+1. The DLL installs the global `WH_KEYBOARD` hook and, for each key, asks Macrofy's
+   hidden decider window whether to block it.
+2. Macrofy registers Raw Input too, so by the time the hook asks, it already knows which
+   keyboard sent the key. It says block only for the captured keyboard and pass for
+   everything else. No re-injection, so your other keyboards are never touched.
 
-1. The DLL installs the global `WH_KEYBOARD` hook. For each key it asks Macrofy's
-   hidden **decider window** (`SendMessage(WM_HOOK)`) whether to block.
-2. Macrofy registers **Raw Input**, so by the time the hook asks, it already knows
-   the source device for that key. It answers *block* only for the captured
-   keyboard and *pass* for everything else — **no re-injection**, so your other
-   keyboards are never touched.
+### Why not a driver?
 
-This is the approach proven by projects like
-[NotEnoughHotkeys](https://github.com/VollRahm/NotEnoughHotkeys).
+A kernel driver would be the bulletproof way to do this, but anti-cheat systems
+(Vanguard, EAC, BattlEye) flag drivers just for being installed, and a lot of people
+who'd want this also play those games. So Macrofy stays driver-free. Close the app or
+toggle capture off and nothing is loaded at all.
 
-### Why not the Interception driver?
+### What it can't do (and that's fine)
 
-A kernel filter driver ([Interception](https://github.com/oblitum/Interception))
-would be the most robust option, but **anti-cheat systems flag it by mere
-presence** (Vanguard, EAC, BattlEye…), so it's deliberately not used. Macrofy's
-`WH_KEYBOARD` approach has no kernel driver and no persistent footprint — close
-the app (or toggle capture off) and nothing is loaded.
+These come with the driver-free approach, they aren't bugs:
 
-**Driver-free limitations** (inherent, not bugs): the Windows key and a couple of
-keys the OS handles before Raw Input can't be attributed and pass through; and the
-DLL can't inject into *elevated* apps (unless Macrofy is run elevated) or some
-sandboxed Store apps, so the captured keyboard won't be blocked while one of those
-is foreground.
+- The left and right Windows keys can't be macros. Windows handles them before Macrofy
+  ever sees them, so they show up dimmed and can't be bound.
+- It can't capture inside apps running as administrator unless Macrofy is also running
+  as administrator (there's a "Restart as administrator" button in Settings for that).
+- A few sandboxed Store apps won't load the hook, so the captured keyboard works normally
+  while one of those is in focus.
 
-## Macros
+## Getting it
 
-Capture a keyboard, press a key to select it, and bind it to an action:
+Grab the latest build from [Releases](https://github.com/UltimaCodes/RapidMacro/releases),
+unzip it, and run `Macrofy.App.exe`.
 
-| Action       | Target field            |
-|--------------|-------------------------|
-| Launch app   | exe / path (+ arguments)|
-| Open URL     | https://…               |
-| Type text    | literal text to type    |
-| Send hotkey  | e.g. `Ctrl+Shift+Esc`   |
-| Run command  | a shell command line    |
+Heads up: the build isn't code-signed, so the first time you run it Windows might show a
+blue "Windows protected your PC" box. That's just SmartScreen being cautious about an
+unknown publisher. Click **More info**, then **Run anyway**.
 
-Bindings are saved per device to `%AppData%\Macrofy\profiles\` as JSON, and run on
-a background thread so a slow launch never stalls capture.
+## How to use it
 
-## Using it
+1. Open Macrofy and go to **Devices**. Pick the keyboard you want to take over (each one
+   is named from its hardware info, and you can rename it).
+2. Flip on **Capture**. That keyboard is now isolated. Press one of its keys and you'll
+   see it light up in the tester and get picked in the **Macros** panel.
+3. Choose what the key should do, fill in the details, and hit **Save macro**. Want a
+   sequence? Add a few steps with delays between them.
+4. Toggle capture off (or close the app) any time to hand the keyboard back to Windows.
 
-1. `dotnet run --project src/Macrofy.App`
-2. On **Devices**, pick a keyboard (named from its HID product string).
-3. Toggle **Capture**. Press a key on that keyboard — it's isolated from your apps
-   and selected in the **Macros** panel.
-4. Choose an action, fill the target, **Add binding**. Now that key runs the macro.
-5. Toggle capture off (or close the app) to hand the keyboard back to Windows.
+To make it always-on: in **Settings**, turn on "Start with Windows" and "Auto-capture a
+keyboard at startup", and Macrofy will quietly take over your macro keyboard every time
+you log in.
 
-## Build & run
+## Build from source
 
 ```powershell
-# one-time: a C compiler to build the native hook DLL
+# one-time: only needed if you change the native hook (native/hook.c)
 winget install BrechtSanders.WinLibs.POSIX.UCRT
-native\build.ps1        # produces native\MacrofyHook.dll
+native\build.ps1        # builds native\MacrofyHook.dll
 
-dotnet build            # MacrofyHook.dll is copied next to the app automatically
+dotnet build            # the hook DLL is copied next to the app automatically
 dotnet run --project src/Macrofy.App
 ```
 
-Requires the .NET 8 SDK on Windows (x64). A prebuilt `MacrofyHook.dll` is committed,
-so you only need the compiler if you change `native/hook.c`.
+You need the .NET 8 SDK on Windows (x64). A prebuilt `MacrofyHook.dll` is committed, so
+unless you're editing the C hook you don't even need the compiler.
+
+## Where your stuff lives
+
+Everything is in `%AppData%\Macrofy\`: device names, per-keyboard macro profiles,
+layouts, your settings, and a `log.txt` if anything ever crashes. There's an "Open config
+folder" button in Settings.
 
 ## Project layout
 
 ```
 Macrofy.sln
 native/
-  hook.c                 the native WH_KEYBOARD hook DLL (build.ps1 -> MacrofyHook.dll)
+  hook.c                 the native WH_KEYBOARD hook (build.ps1 builds MacrofyHook.dll)
 src/
-  Macrofy.App/           WPF (.NET 8) UI
-    ViewModels/MainViewModel.cs   devices, capture toggle, macro binding editor
-    MainWindow.xaml               shell, device list, on-screen keyboard, Macros panel
-  Macrofy.Core/          input + macros, no UI dependency
-    Input/
-      WhKeyboardBackend.cs        the working capture engine (WH_KEYBOARD + Raw Input)
-      RawInputHookBackend.cs      earlier WH_KEYBOARD_LL engine (kept for the diag tool)
-      IInputBackend.cs            abstraction over the capture mechanism
-      RawInputDeviceEnumerator.cs keyboard enumeration & grouping
-      Interop/NativeMethods.cs    Win32 P/Invoke
-    Macros/
-      MacroModels.cs              action / binding / profile
-      MacroEngine.cs              captured key -> action dispatch
-      MacroExecutor.cs            runs actions (launch / url / text / hotkey / command)
-      MacroProfileStore.cs        JSON persistence per device
-  Macrofy.Diag/          console diagnostics (list / monitor / capture / selftest)
+  Macrofy.App/           the WPF app (.NET 8), styled with WPF-UI
+  Macrofy.Core/          input + macros, no UI
+    Input/               capture engine (WH_KEYBOARD + Raw Input), device detection
+    Macros/              actions, layers, the engine, JSON profiles
+  Macrofy.Diag/          console tool for poking at the input pipeline
 ```
-
-## The phases
-
-- **Phase 1 — Detection** ✅
-  Enumerate every physical keyboard via Raw Input, group a device's HID collections
-  together by VID/PID, filter out non-keyboard HID devices, and auto-name each from
-  its HID product string. Custom names can be saved per device.
-
-- **Phase 2 — Isolation** ✅
-  Block the captured keyboard's keys system-wide while leaving every other keyboard
-  native. This was the hard part. The first approach — an in-process `WH_KEYBOARD_LL`
-  hook correlated with Raw Input — is a **dead end**: that hook fires *before* Raw
-  Input, and when it blocks a key Windows never generates that key's Raw Input, so
-  blocking destroys the only evidence of which device the key came from. The working
-  approach is a global **`WH_KEYBOARD`** hook (native `MacrofyHook.dll`) that fires at
-  the cooked-message stage, *after* Raw Input has identified the device; it blocks
-  only the captured keyboard and passes the rest through with no re-injection.
-
-- **Phase 3 — Macros** ✅
-  Bind each captured key to an action — launch app, open URL, type text, send hotkey,
-  run command — saved as per-device JSON profiles in `%AppData%\Macrofy\profiles\`,
-  and executed on a background thread so a slow launch never stalls capture.
-
-- **Phase 4 — Polish** (next)
-  System tray + autostart, multi-step macros, and profile import/export.
 
 ## License
 
-MIT © Ryaan Aaqil
+MIT, Ryaan Aaqil

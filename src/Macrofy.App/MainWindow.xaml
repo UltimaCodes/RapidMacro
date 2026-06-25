@@ -41,7 +41,7 @@
                 <DataTrigger Binding="{Binding Capturable}" Value="False">
                     <Setter TargetName="cap" Property="Opacity" Value="0.4" />
                     <Setter TargetName="cap" Property="ToolTip"
-                            Value="Windows handles this key before Macrofy sees it — it can't be captured or turned into a macro." />
+                            Value="Windows grabs this key before Macrofy ever sees it, so it can't be a macro." />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding IsPressed}" Value="True">
                     <Setter TargetName="cap" Property="Background" Value="{StaticResource RmAccentBrush}" />
@@ -96,7 +96,7 @@
 
                     <TextBlock DockPanel.Dock="Bottom" Margin="22,0,0,16" FontSize="11"
                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                               Text="v0.1" />
+                               Text="v1.0" />
 
                     <StackPanel>
                         <RadioButton x:Name="NavDevices" GroupName="Nav" Style="{StaticResource NavItemStyle}"
@@ -278,7 +278,7 @@
                                 <Grid>
                                     <DockPanel>
                                         <TextBlock DockPanel.Dock="Top"
-                                                   Text="TEST — keys light up as you press them on the captured device"
+                                                   Text="TEST: keys light up as you press them on the captured keyboard"
                                                    FontSize="11" FontWeight="SemiBold" Margin="2,0,0,12"
                                                    Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
                                         <Grid>
@@ -314,7 +314,7 @@
                                                        HorizontalAlignment="Center" Margin="0,10,0,0" />
                                             <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,6,0,0"
                                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                                       Text="Press every key on this keyboard once — we'll record exactly which keys it has. Keys won't type or fire macros while learning." />
+                                                       Text="Press every key on this keyboard once and we'll record exactly which keys it has. Nothing types or fires macros while you do this." />
                                             <TextBlock HorizontalAlignment="Center" Margin="0,14,0,0" FontWeight="SemiBold"
                                                        Foreground="{StaticResource RmAccentBrush}"
                                                        Text="{Binding LearnedKeys.Count, StringFormat='{}{0} keys recorded'}" />
@@ -408,11 +408,11 @@
                                             Background="#14FFFFFF">
                                         <StackPanel>
                                             <!-- STEP 1: pick a key -->
-                                            <TextBlock Text="STEP 1 — PICK A KEY" FontSize="10" FontWeight="SemiBold"
+                                            <TextBlock Text="STEP 1: PICK A KEY" FontSize="10" FontWeight="SemiBold"
                                                        Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
                                             <TextBlock Margin="0,3,0,0" FontSize="12" TextWrapping="Wrap"
                                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                                       Text="Press a key on the captured keyboard — it'll show up below."
+                                                       Text="Press a key on the captured keyboard and it'll show up below."
                                                        Visibility="{Binding HasBindKey, Converter={StaticResource InverseBoolToVis}}" />
                                             <Border Margin="0,6,0,0" CornerRadius="6" Padding="10,6"
                                                     Background="{StaticResource RmAccentBrush}"
@@ -423,7 +423,7 @@
                                             </Border>
 
                                             <!-- STEP 2: choose what it does -->
-                                            <TextBlock Text="STEP 2 — CHOOSE WHAT IT DOES" FontSize="10" FontWeight="SemiBold"
+                                            <TextBlock Text="STEP 2: CHOOSE WHAT IT DOES" FontSize="10" FontWeight="SemiBold"
                                                        Margin="0,14,0,0"
                                                        Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
                                             <ComboBox Margin="0,6,0,0" ItemsSource="{Binding ActionKinds}"
@@ -438,7 +438,7 @@
                                             <!-- STEP 3: the contextual detail for the chosen action -->
                                             <TextBlock Margin="0,14,0,3" FontSize="10" FontWeight="SemiBold"
                                                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                                                       Text="{Binding BindTargetLabel, StringFormat='STEP 3 — {0}'}" />
+                                                       Text="{Binding BindTargetLabel, StringFormat='STEP 3: {0}'}" />
 
                                             <!-- Launch / Open / Run: single line, with Browse for Launch -->
                                             <Grid Visibility="{Binding IsStandardTarget, Converter={StaticResource BoolToVis}}">
@@ -644,7 +644,7 @@
                                                 <TextBlock Text="Auto-capture a keyboard at startup" FontWeight="SemiBold" />
                                                 <TextBlock TextWrapping="Wrap" FontSize="12" Margin="0,3,0,0"
                                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                                           Text="When Macrofy starts, immediately capture the keyboard below — your macros are live without opening the window. Pairs well with 'Start with Windows'." />
+                                                           Text="When Macrofy starts, it grabs the keyboard below right away, so your macros are live without opening the window. Works great with 'Start with Windows'." />
                                             </StackPanel>
                                             <ui:ToggleSwitch Grid.Column="1" VerticalAlignment="Center"
                                                              IsChecked="{Binding AutoCaptureOnLaunch, Mode=TwoWay}" />
@@ -684,7 +684,7 @@
                                                 <TextBlock Text="Global capture hotkey" FontWeight="SemiBold" />
                                                 <TextBlock TextWrapping="Wrap" FontSize="12" Margin="0,3,0,0"
                                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                                           Text="Toggle capture for the selected keyboard from anywhere — handy right before launching a game." />
+                                                           Text="Toggle capture for the selected keyboard from anywhere. Handy right before you launch a game." />
                                             </StackPanel>
                                             <ui:ToggleSwitch Grid.Column="1" VerticalAlignment="Center"
                                                              IsChecked="{Binding GlobalHotkeyEnabled, Mode=TwoWay}" />
@@ -771,14 +771,14 @@
                                     </Border>
                                     <StackPanel Grid.Column="1" Margin="18,0,0,0" VerticalAlignment="Center">
                                         <TextBlock Text="Macrofy" FontSize="30" FontWeight="Bold" />
-                                        <TextBlock Text="Version 0.1  ·  Driver-free macro pad for Windows" TextWrapping="Wrap"
+                                        <TextBlock Text="Version 1.0  ·  driver-free macro pad for Windows" TextWrapping="Wrap"
                                                    Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
                                     </StackPanel>
                                 </Grid>
 
                                 <TextBlock TextWrapping="Wrap" FontSize="15" Margin="0,0,0,22" LineHeight="22"
                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                           Text="Turn a spare keyboard into a programmable macro pad — without touching the keyboards you actually type on. Pick a keyboard, flip it to capture, and every key becomes whatever you need it to be." />
+                                           Text="Take a spare keyboard and turn it into a macro pad, without messing with the keyboards you actually type on. Pick one, flip it to capture, and every key does whatever you want." />
 
                                 <ui:Card Margin="0,0,0,10">
                                     <Grid>
@@ -795,7 +795,7 @@
                                             <TextBlock Text="One keyboard, fully yours" FontWeight="SemiBold" />
                                             <TextBlock TextWrapping="Wrap" FontSize="12" Margin="0,2,0,0"
                                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                                       Text="Isolate a single keyboard so its keys stop typing and start firing macros — while every other keyboard keeps working normally." />
+                                                       Text="Macrofy takes over one keyboard so its keys stop typing and start firing macros. Every other keyboard keeps working like normal." />
                                         </StackPanel>
                                     </Grid>
                                 </ui:Card>
@@ -815,7 +815,7 @@
                                             <TextBlock Text="An action for everything" FontWeight="SemiBold" />
                                             <TextBlock TextWrapping="Wrap" FontSize="12" Margin="0,2,0,0"
                                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                                       Text="Launch apps, open links, type text, fire hotkeys, control media and volume, or run commands — one shot or a whole sequence." />
+                                                       Text="Launch apps, open links, type text, fire hotkeys, control media and volume, or run commands. One action, or a whole sequence." />
                                         </StackPanel>
                                     </Grid>
                                 </ui:Card>
@@ -835,7 +835,7 @@
                                             <TextBlock Text="Layers" FontWeight="SemiBold" />
                                             <TextBlock TextWrapping="Wrap" FontSize="12" Margin="0,2,0,0"
                                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                                       Text="Hold or tap one key to flip the whole keyboard to another set of macros — like a Fn layer, but for anything you want." />
+                                                       Text="Hold or tap a key to flip the whole keyboard to another set of macros. Like a Fn layer, but for anything you want." />
                                         </StackPanel>
                                     </Grid>
                                 </ui:Card>
@@ -862,7 +862,7 @@
 
                                 <TextBlock Margin="2,16,0,0" FontSize="12" TextWrapping="Wrap"
                                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                                           Text="Made for Windows · github.com/UltimaCodes/RapidMacro" />
+                                           Text="made for windows :D" />
                             </StackPanel>
                         </ScrollViewer>
                     </Grid>

@@ -5,13 +5,13 @@ using static Macrofy.Core.Input.Interop.NativeMethods;
 namespace Macrofy.Core.Input;
 
 // The working capture backend. A native WH_KEYBOARD hook DLL (MacrofyHook.dll) is
-// injected into every process; it fires when an app pulls the cooked keyboard message —
-// AFTER Raw Input has already identified the source device — and asks this decider
+// injected into every process; it fires when an app pulls the cooked keyboard message -
+// AFTER Raw Input has already identified the source device - and asks this decider
 // window (WM_HOOK) whether to block. Because blocking happens at the cooked stage, it
 // does NOT destroy the Raw Input we need, which is the catch-22 that made the in-process
 // WH_KEYBOARD_LL approach impossible. We register Raw Input here too, so by the time
 // WM_HOOK arrives the device for that key is known: we return 1 (block) only for the
-// captured device and pass everything else through untouched — no re-injection.
+// captured device and pass everything else through untouched - no re-injection.
 //
 // Inherent driver-free limits: keys handled before Raw Input (Windows key) can't be
 // attributed; processes the DLL can't inject into (elevated apps unless Macrofy is
@@ -34,7 +34,7 @@ public sealed class WhKeyboardBackend : IInputBackend
     private volatile bool _capturing;
     private readonly ManualResetEventSlim _ready = new(false);
 
-    // Keys the OS routes before Raw Input can attribute them — left untouched.
+    // Keys the OS routes before Raw Input can attribute them - left untouched.
     private static bool IsExcluded(int vk) => vk is 0x5B or 0x5C; // L/R Windows key
 
     public event EventHandler<DeviceKeyEvent>? CapturedKey;
@@ -247,7 +247,7 @@ public sealed class WhKeyboardBackend : IInputBackend
                 _recent.Add(new Decision(Canonical(vkey), isDown, captured, Environment.TickCount64));
 
             // Surface captured keys to the UI / macro engine (device-authoritative, one
-            // event per physical press — Raw Input does not auto-repeat).
+            // event per physical press - Raw Input does not auto-repeat).
             if (captured && !IsExcluded(vkey))
                 CapturedKey?.Invoke(this, new DeviceKeyEvent(vkey, raw.keyboard.MakeCode, isDown));
         }

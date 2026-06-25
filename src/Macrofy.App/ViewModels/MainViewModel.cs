@@ -8,7 +8,7 @@ using Macrofy.Core.Macros;
 namespace Macrofy.App.ViewModels;
 
 // Drives the Devices view. Captured-key events are dropped into a lock-free queue on the
-// backend (decider) thread and drained by a UI timer — UI work must never run on that
+// backend (decider) thread and drained by a UI timer - UI work must never run on that
 // thread, which has a hard latency budget for answering the hook's block/pass question.
 public sealed class MainViewModel : ObservableObject, IDisposable
 {
@@ -154,15 +154,15 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public string StatusText => _selectedKeyboard is null
         ? "No keyboard selected."
         : _isLearning
-            ? "Learning keys — press every key on this keyboard once, then Save."
+            ? "Learning keys. Press every key on this keyboard once, then hit Save."
             : _isCapturing && _captureSuspended
-                ? "Capture paused while you type — it resumes automatically when you click out of the text box."
+                ? "Capture's paused while you type. It comes back as soon as you click out of the text box."
                 : _isCapturing
-                    ? $"Capturing \"{_selectedKeyboard.DisplayName}\" — its keys are isolated and run your macros instead of typing."
-                    : $"\"{_selectedKeyboard.DisplayName}\" is passing through normally. Toggle capture to take it over.";
+                    ? $"Capturing \"{_selectedKeyboard.DisplayName}\". Its keys are isolated and run your macros instead of typing."
+                    : $"\"{_selectedKeyboard.DisplayName}\" is passing through like normal. Toggle capture to take it over.";
 
     // While a text field is focused we pause the actual blocking (so the captured keyboard can
-    // type into it) without flipping IsCapturing — the toggle stays "on" and we resume on blur.
+    // type into it) without flipping IsCapturing - the toggle stays "on" and we resume on blur.
     private bool _captureSuspended;
     public void SetCaptureSuspended(bool suspend)
     {
@@ -283,10 +283,10 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     {
         MacroActionKind.LaunchApp => "Opens a program. Use Browse… to pick an app, or paste a path. Arguments are optional.",
         MacroActionKind.OpenUrl => "Opens this link in your default browser.",
-        MacroActionKind.TypeText => "Types this text wherever your cursor is — great for emails, snippets or sign-offs.",
+        MacroActionKind.TypeText => "Types this text wherever your cursor is. Great for emails, snippets, or sign-offs.",
         MacroActionKind.SendHotkey => "Sends a shortcut to the app you're using. Recognizes letters, digits, F-keys and common keys.",
         MacroActionKind.RunCommand => "Runs a command line (via cmd). For advanced use.",
-        MacroActionKind.MediaKey => "Sends a media or volume key to Windows — works with most players.",
+        MacroActionKind.MediaKey => "Sends a media or volume key to Windows. Works with most players.",
         MacroActionKind.LayerHold => "While this key is held, the keyboard switches to the chosen layer; releasing it returns you.",
         MacroActionKind.LayerToggle => "Tap to switch the keyboard to the chosen layer; tap again to return to Base.",
         _ => string.Empty,
@@ -494,7 +494,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         GlobalHotkeyToggled?.Invoke(this, EventArgs.Empty); // re-register with the new combo
     }
 
-    // Invoked by the global hotkey — flip capture on the selected keyboard.
+    // Invoked by the global hotkey - flip capture on the selected keyboard.
     public void ToggleCaptureHotkey()
     {
         if (_selectedKeyboard is not null)
@@ -505,7 +505,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     public bool CanElevate => !ElevationHelper.IsElevated;
     public string ElevationStatus => ElevationHelper.IsElevated
-        ? "Macrofy is running as administrator — it can capture elevated apps and games."
+        ? "Macrofy is running as administrator, so it can capture elevated apps and games."
         : "Run Macrofy as administrator to capture elevated apps and some anti-cheat games.";
 
     // ---- auto-capture selection (Settings tab) ----
@@ -574,7 +574,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         }
     }
 
-    // The Custom layout is empty until the user calibrates — nudge them to learn keys.
+    // The Custom layout is empty until the user calibrates - nudge them to learn keys.
     public bool ShowLearnPrompt => _layoutKind == KeyboardLayoutKind.Custom && _customKeys.Count == 0 && !_isLearning;
 
     private void RebuildKeyboardLayout() => KeyboardLayout = new KeyboardLayoutViewModel(_layoutKind, _customKeys);
@@ -692,7 +692,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         }
         else
         {
-            // Stop blocking the device. Only tear down the engine when capture is truly off —
+            // Stop blocking the device. Only tear down the engine when capture is truly off -
             // a temporary suspend (still capturing) keeps the profile so resume is instant.
             _backend.SetCapturedDevices(Array.Empty<string>());
             if (!_isCapturing)
@@ -764,7 +764,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
         var binding = new MacroBinding { VirtualKey = _bindVk, KeyName = _bindKeyName };
         if (steps.Count == 1)
-            binding.Action = steps[0].Action;   // single action — keep it simple/back-compatible
+            binding.Action = steps[0].Action;   // single action - keep it simple/back-compatible
         else
             binding.Steps = steps;              // a real sequence
 

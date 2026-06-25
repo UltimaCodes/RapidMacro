@@ -8,7 +8,7 @@ namespace Macrofy.Core.Input;
 // Driver-free backend (suppress-then-reinject). On this class of system Windows posts a
 // key's Raw Input only AFTER the low-level hook returns, so the hook can't know the
 // source device in time to block selectively. Instead the hook blocks EVERY key while
-// capturing; the raw thread — which authoritatively knows the device — then either
+// capturing; the raw thread - which authoritatively knows the device - then either
 // surfaces the key (captured device) or RE-INJECTS it via SendInput so that other
 // keyboards keep typing. Re-injection runs on its own thread and never on the raw
 // thread (doing SendInput there stalls the raw stream and drops input).
@@ -64,7 +64,7 @@ public sealed class RawInputHookBackend : IInputBackend
         _hookProc = HookProc;
     }
 
-    // Keys the OS routes before Raw Input can identify the device — can't be reliably
+    // Keys the OS routes before Raw Input can identify the device - can't be reliably
     // attributed or blocked driver-free, so we never touch them (they type normally).
     private static bool IsExcluded(int vk) => vk is 0x5B or 0x5C; // L/R Windows key
 
@@ -222,7 +222,7 @@ public sealed class RawInputHookBackend : IInputBackend
         };
         RegisterClassEx(ref wndClass);
 
-        // A real top-level window we never show — NOT HWND_MESSAGE. RIDEV_INPUTSINK
+        // A real top-level window we never show - NOT HWND_MESSAGE. RIDEV_INPUTSINK
         // (background raw input) is not delivered to message-only windows, which made
         // every keyboard go dead whenever Macrofy lost focus.
         _messageWindow = CreateWindowEx(
@@ -323,7 +323,7 @@ public sealed class RawInputHookBackend : IInputBackend
     private void Resolve(ushort vkey, ushort scanCode, bool isDown, bool extended, string path)
     {
         if (IsExcluded(vkey))
-            return; // never suppressed by the hook either — leave it completely alone
+            return; // never suppressed by the hook either - leave it completely alone
 
         bool captured;
         bool reinject = false;

@@ -300,7 +300,7 @@ internal static class NativeMethods
     public static extern nint LoadLibrary(string lpFileName);
 
     // Native WH_KEYBOARD hook DLL, shipped beside the exe. It fires after Raw Input (so
-    // the device is known) and asks our decider window — via WM_HOOK — whether to block.
+    // the device is known) and asks our decider window - via WM_HOOK - whether to block.
     public const int WM_HOOK = 0x8101;
     public const string DeciderWindowClass = "MacrofyDeciderWnd";
 

@@ -63,7 +63,7 @@ void Monitor()
 
     Console.WriteLine($"Hook installed: {backend.IsHookInstalled}");
     Console.WriteLine("Monitoring all keyboards (no suppression). For each key, compare the");
-    Console.WriteLine("[HOOK] and [RAW] timestamps — a big gap is the lag that causes leaks.");
+    Console.WriteLine("[HOOK] and [RAW] timestamps - a big gap is the lag that causes leaks.");
     Console.WriteLine("Press Enter to stop.");
     Console.ReadLine();
 }
@@ -90,7 +90,7 @@ void Capture(string indexArg)
 
     Console.WriteLine($"Hook installed: {backend.IsHookInstalled}");
     Console.WriteLine($"Capturing \"{device.DisplayName}\" ({device.CollectionCount} collection(s)).");
-    Console.WriteLine("Press its keys — every [HOOK] should have a matching [CAPTURED] and NOT type here.");
+    Console.WriteLine("Press its keys - every [HOOK] should have a matching [CAPTURED] and NOT type here.");
     Console.WriteLine("Test it with this console focused AND with another app focused. Press Enter to stop.");
     Console.ReadLine();
 }
@@ -123,8 +123,8 @@ void SelfTest()
     Console.WriteLine($"raw  events seen:     {rawCount}");
     bool hookOk = backend.IsHookInstalled && injectedSeen > 0;
     Console.WriteLine(hookOk
-        ? "RESULT: PASS — hook pipeline receives keystrokes."
-        : "RESULT: FAIL — hook did not observe injected keys.");
+        ? "RESULT: PASS - hook pipeline receives keystrokes."
+        : "RESULT: FAIL - hook did not observe injected keys.");
     Console.WriteLine(rawCount > 0
         ? "Raw Input pipeline is delivering events."
         : "NOTE: Raw Input saw no events for injected keys (injected input may bypass it).");
